@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, use } from "react";
-import dayjs from "dayjs";
+import dayjs from 'dayjs';
+import 'dayjs/locale/es'; // Importa el idioma español
+
 import axios from "axios";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
 import ArrowButton from "./ArrowButton";
 import { redirect } from "next/dist/server/api-utils";
-
+dayjs.locale('es');
 const Calendar = () => {
   const [currentDate, setCurrentDate] = useState(dayjs());
   const [holidays, setHolidays] = useState([]);
@@ -32,17 +34,7 @@ const Calendar = () => {
     fetchHolidays();
   }, [currentDate]);
 
-  //   const feriadosArgentina = [
-  //     "2025-01-01", // Año Nuevo
-  //     "2025-03-24", // Día de la Memoria
-  //     "2025-04-02", // Malvinas
-  //     "2025-05-01", // Día del trabajador
-  //     "2025-05-25", // Revolución de Mayo
-  //     "2025-06-20", // Paso a la inmortalidad de Belgrano
-  //     "2025-07-09", // Independencia
-  //     "2025-12-25", // Navidad
-  //     // Agregá más según necesites
-  //   ];
+  
 
   const days = [];
 
