@@ -1,28 +1,48 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import dayjs from "dayjs";
+import axios from "axios";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
 import ArrowButton from "./ArrowButton";
+import { redirect } from "next/dist/server/api-utils";
 
 const Calendar = () => {
   const [currentDate, setCurrentDate] = useState(dayjs());
+  const [holidays, setHolidays] = useState([]);
   const startOfMounth = currentDate.startOf("month");
   const endOfMonth = currentDate.endOf("month");
   const startDay = startOfMounth.day(); //domingo
   const daysInMonth = currentDate.daysInMonth();
 
-  const feriadosArgentina = [
-    "2025-01-01", // Año Nuevo
-    "2025-03-24", // Día de la Memoria
-    "2025-04-02", // Malvinas
-    "2025-05-01", // Día del trabajador
-    "2025-05-25", // Revolución de Mayo
-    "2025-06-20", // Paso a la inmortalidad de Belgrano
-    "2025-07-09", // Independencia
-    "2025-12-25", // Navidad
-    // Agregá más según necesites
-  ];
+  useEffect(() => {
+    const fetchHolidays = async () => {
+      try {
+        const year = currentDate.year();
+        const res = await axios.get(
+          `https://api.argentinadatos.com/v1/feriados/${year}`
+        );
+       
+        setHolidays(res.data);
+      } catch (error) {
+        console.error('Error al cargar feriados: ', error);
+      }
+    };
+
+    fetchHolidays();
+  }, [currentDate]);
+
+  //   const feriadosArgentina = [
+  //     "2025-01-01", // Año Nuevo
+  //     "2025-03-24", // Día de la Memoria
+  //     "2025-04-02", // Malvinas
+  //     "2025-05-01", // Día del trabajador
+  //     "2025-05-25", // Revolución de Mayo
+  //     "2025-06-20", // Paso a la inmortalidad de Belgrano
+  //     "2025-07-09", // Independencia
+  //     "2025-12-25", // Navidad
+  //     // Agregá más según necesites
+  //   ];
 
   const days = [];
 
@@ -67,10 +87,10 @@ const Calendar = () => {
         {days.map((day, index) => {
           const isRealDay = day !== null;
 
-          let esFeriado = false;
+          let isHoliday = false;
           if (isRealDay) {
-            const fecha = currentDate.clone().date(day).format("YYYY-MM-DD");
-            esFeriado = feriadosArgentina.includes(fecha);
+            const date = currentDate.clone().date(day).format("YYYY-MM-DD");
+            isHoliday = holidays.some(d => d.fecha === date);
           }
 
           return (
@@ -81,7 +101,7 @@ const Calendar = () => {
               {isRealDay && (
                 <div
                   className={`text-sm font-bold w-full rounded-t-md px-1 ${
-                    esFeriado ? "bg-violet-400 text-white" : "bg-teal-200"
+                    isHoliday ? "bg-violet-400 text-white" : "bg-teal-200"
                   }`}
                 >
                   {day}
