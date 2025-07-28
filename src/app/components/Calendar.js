@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import dayjs from "dayjs";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
+import ArrowButton from "./ArrowButton";
 
 const Calendar = () => {
   const [currentDate, setCurrentDate] = useState(dayjs());
@@ -32,11 +34,29 @@ const Calendar = () => {
     days.push(d);
   }
 
+  //   CAMBIAR DE MESES PARA ATRAS Y ADELANTE
+  const handlePrevMonth = () =>
+    setCurrentDate(currentDate.subtract(1, "month"));
+  const handleNextMonth = () => setCurrentDate(currentDate.add(1, "month"));
+
   return (
     <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">
-        {currentDate.format("MMMM YYYY")}
-      </h2>
+      <div className="flex justify-between items-center mb-4">
+        <ArrowButton
+          onClick={handlePrevMonth}
+          Icon={ChevronLeftIcon}
+          direction="left"
+        />
+        <h2 className="text-2xl font-bold mb-4">
+          {currentDate.format("MMMM YYYY")}
+        </h2>
+        <ArrowButton
+          onClick={handleNextMonth}
+          Icon={ChevronRightIcon}
+          direction="right"
+        />
+      </div>
+
       <div className="grid grid-cols-7 gap-2 text-center">
         {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sab"].map((day) => (
           <div key={day} className="font-bold">
