@@ -81,9 +81,9 @@ const Calendar = () => {
         />
       </div>
 
-      <div className="grid grid-cols-7 gap-2 text-center">
+      <div className="grid grid-cols-7 gap-2  text-center">
         {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sab"].map((day) => (
-          <div key={day} className="font-bold">
+          <div key={day} className="font-bold bg-midnightblue rounded-md">
             {day}
           </div>
         ))}
@@ -100,13 +100,13 @@ const Calendar = () => {
           return (
             <div
               key={index}
-              className="border border-gray-300 rounded-md h-24 flex flex-col items-start bg-white text-left text-xs"
+              className="rounded-md h-24 flex flex-col items-start bg-bluenavydk text-left text-xs"
             >
               {isRealDay && (
                 <>
                   <div
                     className={`text-sm font-bold w-full rounded-t-md px-1 text-white ${
-                      isHoliday ? "bg-violet-400" : "bg-teal-400"
+                      isHoliday ? "bg-imperialred" : "bg-crayolablue"
                     }`}
                   >
                     {day}

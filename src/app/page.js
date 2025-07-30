@@ -5,7 +5,7 @@ export default function Home() {
   return (
 
 
-    <div className="bg-darkbg flex">
+    <div className="bg-darkbg flex text-frenchgray">
       <Header />
       <Calendar />
     </div>

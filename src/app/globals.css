@@ -15,6 +15,13 @@
 
 @theme {
     --color-darkbg: #092934;
+    --color-bluenavydk: #0F4557;
+    --color-frenchgray: #D0CCD0;
+    --color-cornflower: #758BFD;
+    --color-cerulean: #186F8C;
+    --color-imperialred: #F03A47;
+    --color-crayolablue: #5E79FD;
+    --color-midnightblue: #0C3746;
 }
 
 @media (prefers-color-scheme: light) {
