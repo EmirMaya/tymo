@@ -45,7 +45,7 @@ const Calendar = () => {
       (h) => h.fecha === date.format("YYYY-MM-DD")
     );
 
-    if (dayOfWeek >= 1 && dayOfWeek <= 5 && !isHoliday) {
+    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
       totalHours += 6;
     }
   }
@@ -118,7 +118,7 @@ const Calendar = () => {
                     const weeklyDay = date.day(); // 0 = domingo, 1 = lunes, etc.
                     const isWorkyDay = weeklyDay >= 1 && weeklyDay <= 5;
 
-                    if (isWorkyDay && !isHoliday) {
+                    if (isWorkyDay) {
                       return (
                         <div className="mt-1">
                           <div>🕒 9:30 - 15:30</div>
@@ -135,7 +135,7 @@ const Calendar = () => {
         })}
       </div>
       {totalHours > 0 && (
-        <div className="mt-4 bg-amber-600 text-white p-2 rounded">
+        <div className="mt-4 bg-teal-600 text-white p-2 rounded">
           Total del mes: {totalHours} hs
         </div>
       )}
