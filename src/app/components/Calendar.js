@@ -41,9 +41,9 @@ const Calendar = () => {
   for (let d = 1; d <= daysInMonth; d++) {
     const date = currentDate.clone().date(d);
     const dayOfWeek = date.day(); // 1 a 5 = lunes a viernes
-    const isHoliday = holidays.some(
-      (h) => h.fecha === date.format("YYYY-MM-DD")
-    );
+    // const isHoliday = holidays.some(
+    //   (h) => h.fecha === date.format("YYYY-MM-DD")
+    // );
 
     if (dayOfWeek >= 1 && dayOfWeek <= 5) {
       totalHours += 6;
@@ -64,7 +64,7 @@ const Calendar = () => {
   const handleNextMonth = () => setCurrentDate(currentDate.add(1, "month"));
 
   return (
-    <div className="p-4">
+    <div className="mt-7 p-6 w-screen">
       <div className="flex justify-between items-center mb-4">
         <ArrowButton
           onClick={handlePrevMonth}
