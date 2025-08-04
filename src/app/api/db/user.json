@@ -1,38 +1,42 @@
 [
   {
     "DNI": "38757823",
-    "NOMBRE Y APELLIDO Asesor": "MURCIA KAREN JANET"
+    "name": "MURCIA KAREN JANET",
+    "password": "38757823"
   },
   {
     "DNI": "42506284",
-    "NOMBRE Y APELLIDO Asesor": "RODRIGUEZ, SELENE"
+    "name": "RODRIGUEZ SELENE",
+    "password": "42506284"
   },
   {
-     "DNI": "44058035",
-    "NOMBRE Y APELLIDO Asesor": "PACHECO, ANA PAULA"
+    "DNI": "44058035",
+    "name": "PACHECO ANA PAULA",
+    "password": "44058035"
   },
   {
-     "DNI": "40688879",
-    "NOMBRE Y APELLIDO Asesor": "MAYA, EMIR ANDRÉS"
+    "DNI": "40688879",
+    "name": "MAYA EMIR ANDRÉS",
+    "password": "40688879"
   },
   {
-     "DNI": "44009637",
-     "NOMBRE Y APELLIDO Asesor": "REVELLO, ALDANA CAMILA"
+    "DNI": "44009637",
+    "name": "REVELLO ALDANA CAMILA",
+    "password": "44009637"
   },
   {
     "DNI": "42421513",
-    "NOMBRE Y APELLIDO Asesor": "NIFOSI, JOAQUIN IGNACIO"
+    "name": "NIFOSI JOAQUIN IGNACIO",
+    "password": "42421513"
   },
   {
     "DNI": "39089282",
-    "NOMBRE Y APELLIDO Asesor": "PAZ MERELO, ANABELA DENIA"
+    "name": "PAZ MERELO ANABELA DENIA",
+    "password": "39089282"
   },
   {
-     "DNI": "42167468",
-    "NOMBRE Y APELLIDO Asesor": "OSORIO, NATACHA"
+    "DNI": "42167468",
+    "name": "OSORIO NATACHA",
+    "password": "42167468"
   }
-  
-
-
-
 ]
