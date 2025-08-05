@@ -5,9 +5,9 @@ import users from 'user.json';
 
 export const POST = async (request) => {
     const body = await request.json();
-    const {password} = body;
+    const {dni, password} = body;
 
-    const user = users.find( u => u.password === password);
+    const user = users.find( u => u.DNI === dni &&  u.password === password);
 
     if (user) {
         return NextResponse.json({
