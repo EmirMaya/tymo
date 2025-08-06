@@ -1,13 +1,24 @@
 import { NextResponse  } from "next/server";
+import {readFile} from 'fs/promises';
+import path from 'path';
+import { log } from "console";
 
-import users from 'user.json';
 
-
-export const POST = async (request) => {
-    const body = await request.json();
+export const POST = async (req) => {
+    const body = await req.json();
     const {dni, password} = body;
 
+    const filePath = path.join(process.cwd(), 'src/app/api/db/user.json');
+
+    const fileData = await readFile(filePath, 'utf8');
+
+    const users = JSON.parse(fileData);
+    console.log(users);
+    
+
     const user = users.find( u => u.DNI === dni &&  u.password === password);
+    console.log('USER: ', user); // aca me dice undefined
+    
 
     if (user) {
         return NextResponse.json({

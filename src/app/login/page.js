@@ -4,7 +4,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import axios from "axios";
 
 const Login = () => {
-  const { dni, setDni } = useState("");
+  const [ dni, setDni ] = useState("");
   const [password, setPassword] = useState("");
   const [authenticated, setAuthenticated] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -28,16 +28,16 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-darkbg">
       <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md">
+        
         <h2 className="text-xl font-bold mb-4">Iniciar Sesion</h2>
-        <div className="relative mb-4">
-          <input
+        <input
             type="text"
             value={dni}
             onChange={(e) => setDni(e.target.value)}
             placeholder="DNI"
             className="border p-2 rounded w-full mb-4"
           />
-
+        <div className="relative mb-4">
           <input
             type={showPassword ? "text" : "password"}
             value={password}
