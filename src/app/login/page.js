@@ -13,7 +13,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("/api/auth", { password });
+      const res = await axios.post("/api/auth", { dni, password });
       if (res.data.success) {
         setAuthenticated(true);
         setError("");
