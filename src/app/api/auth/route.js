@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { readFile } from "fs/promises";
 import path from "path";
+import bycrpt from "bcryptjs";
+import jwt from "jsonwebtoken"; //bcrypt para comparar la contraseña
+import cookie from "cookie"; // Importamos jsonwebtoken para crear el JWT
+
+const JWT_SECRET = "SECRET_KEY";
 
 export const POST = async (req) => {
   try {
@@ -10,23 +15,46 @@ export const POST = async (req) => {
     const filePath = path.join(process.cwd(), "src/app/api/db/user.json");
     const fileData = await readFile(filePath, "utf8");
     const users = JSON.parse(fileData);
-
-    const user = users.find(
-      (u) => u.DNI === dni && u.password === password
-    );
+    // buscamos al user
+    const user = users.find((u) => u.DNI === dni && u.password === password);
 
     if (user) {
-  
-      return NextResponse.json({
-        success: true,
-        user: {
-          name: user.name,  // Solo el nombre
-          DNI: user.DNI,    // Y el DNI
-        },
-      });
+      // COMPARAMOS PASSWORD PROPORCIONADA CON LA ALMACENADA, USANDO BCRYPT
+      const passwordMatch = await bcrypt.compare(password, user.password);
+      if (passwordMatch) {
+        // si es correecta la pass generamos jwt
+        const token = jwt.sign({ DNI: user.DNI, name: user.name }, JWT_SECRET, {
+          expiresIn: "1h",
+        });
+
+        // ENVIO JWT
+        const res = NextResponse.json({
+          success: true,
+          user: {
+            name: user.name,
+            DNI: user.DNI,
+          },
+          token,
+        });
+
+        //enviar token al front o coockies
+        res.cookie("token", token, {
+          httpOnly: true, // para mayor seguRIDAD
+          secure: process.env.NODE_ENV === "production", // para que solo se envie en HTTPS
+          maxAge: 60 * 60 ** 24 * 7,
+          path: "/", // 7 dias de vida
+        });
+        return res;
+      } else {
+        return NextResponse.json(
+          { success: false, message: "Contraseña Incorrecta" },
+          { status: 401 }
+        );
+      }
+
     } else {
       return NextResponse.json(
-        { success: false, message: "DNI o Contraseña Incorrecta" },
+        { success: false, message: "DNI incorrecto" },
         { status: 401 }
       );
     }
