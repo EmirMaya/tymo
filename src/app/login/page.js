@@ -14,10 +14,14 @@ const Login = () => {
     e.preventDefault();
     try {
       const res = await axios.post("/api/auth", { dni, password });
+      console.log(res.data);
+      
       if (res.data.success) {
+        localStorage('token', res.data.token);
         setAuthenticated(true);
         setError("");
         console.log("User auth: ", res.data.user);
+        window.location.href= '/';
       }
     } catch (err) {
       setAuthenticated(false);

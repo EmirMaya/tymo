@@ -5,7 +5,7 @@ import bycrpt from "bcryptjs";
 import jwt from "jsonwebtoken"; //bcrypt para comparar la contraseña
 import cookie from "cookie"; // Importamos jsonwebtoken para crear el JWT
 
-const JWT_SECRET = "SECRET_KEY";
+const JWT_SECRET = process.env.JWT_SECRET;
 
 export const POST = async (req) => {
   try {
@@ -16,11 +16,11 @@ export const POST = async (req) => {
     const fileData = await readFile(filePath, "utf8");
     const users = JSON.parse(fileData);
     // buscamos al user
-    const user = users.find((u) => u.DNI === dni && u.password === password);
+    const user = users.find((u) => u.DNI === dni && u.passoword === password);
 
     if (user) {
       // COMPARAMOS PASSWORD PROPORCIONADA CON LA ALMACENADA, USANDO BCRYPT
-      const passwordMatch = await bcrypt.compare(password, user.password);
+      const passwordMatch = await bycrpt.compare(password, user.password);
       if (passwordMatch) {
         // si es correecta la pass generamos jwt
         const token = jwt.sign({ DNI: user.DNI, name: user.name }, JWT_SECRET, {
@@ -41,7 +41,7 @@ export const POST = async (req) => {
         res.cookie("token", token, {
           httpOnly: true, // para mayor seguRIDAD
           secure: process.env.NODE_ENV === "production", // para que solo se envie en HTTPS
-          maxAge: 60 * 60 ** 24 * 7,
+          maxAge: 60 * 60 * 24 * 7,
           path: "/", // 7 dias de vida
         });
         return res;
