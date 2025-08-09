@@ -4,7 +4,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import axios from "axios";
 
 const Login = () => {
-  const [ dni, setDni ] = useState("");
+  const [dni, setDni] = useState("");
   const [password, setPassword] = useState("");
   const [authenticated, setAuthenticated] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -14,14 +14,12 @@ const Login = () => {
     e.preventDefault();
     try {
       const res = await axios.post("/api/auth", { dni, password });
-      console.log(res.data);
-      
+
       if (res.data.success) {
-        localStorage('token', res.data.token);
+        localStorage.setItem("token", res.data.token);
         setAuthenticated(true);
         setError("");
-        console.log("User auth: ", res.data.user);
-        window.location.href= '/';
+        window.location.href = "/";
       }
     } catch (err) {
       setAuthenticated(false);
@@ -32,15 +30,14 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-darkbg">
       <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md">
-        
         <h2 className="text-xl font-bold mb-4">Iniciar Sesion</h2>
         <input
-            type="text"
-            value={dni}
-            onChange={(e) => setDni(e.target.value)}
-            placeholder="DNI"
-            className="border p-2 rounded w-full mb-4"
-          />
+          type="text"
+          value={dni}
+          onChange={(e) => setDni(e.target.value)}
+          placeholder="DNI"
+          className="border p-2 rounded w-full mb-4"
+        />
         <div className="relative mb-4">
           <input
             type={showPassword ? "text" : "password"}

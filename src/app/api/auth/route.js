@@ -16,7 +16,7 @@ export const POST = async (req) => {
     const fileData = await readFile(filePath, "utf8");
     const users = JSON.parse(fileData);
     // buscamos al user
-    const user = users.find((u) => u.DNI === dni && u.passoword === password);
+    const user = users.find((u) => u.DNI === dni);
 
     if (user) {
       // COMPARAMOS PASSWORD PROPORCIONADA CON LA ALMACENADA, USANDO BCRYPT
@@ -37,13 +37,16 @@ export const POST = async (req) => {
           token,
         });
 
-        //enviar token al front o coockies
-        res.cookie("token", token, {
-          httpOnly: true, // para mayor seguRIDAD
-          secure: process.env.NODE_ENV === "production", // para que solo se envie en HTTPS
-          maxAge: 60 * 60 * 24 * 7,
-          path: "/", // 7 dias de vida
+        //enviar token al front o coockies cookie al front
+        const serializedCookie = cookie.serialize("token", token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          maxAge: 60 * 60 * 24 * 7, // 7 dias de validez
+          path: "/",
         });
+
+        // añado la coockie a los headers de la respuesta
+        res.headers.set("Set-Cookie", serializedCookie);
         return res;
       } else {
         return NextResponse.json(
@@ -51,7 +54,6 @@ export const POST = async (req) => {
           { status: 401 }
         );
       }
-
     } else {
       return NextResponse.json(
         { success: false, message: "DNI incorrecto" },
