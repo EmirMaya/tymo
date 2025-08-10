@@ -1,24 +1,34 @@
-'use client';
-import { useEffect } from "react";
+"use client";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ClipLoader } from "react-spinners";
 import Calendar from "./components/Calendar";
 import Header from "./components/Header";
 
 export default function Home() {
+  const [loading, setLoading] = useState(true); // Estado de carga.
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
     
+    const token = localStorage.getItem("token");
+
     if (!token) {
       // si no hay token, redirigir a login
-      router.push('/login');
+      router.push("/login");
+    } else {
+      setLoading(false);
     }
   }, [router]);
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-darkbg">
+        <ClipLoader size={70} color="#36d7b7" />
+      </div>
+    );
+  }
   return (
-
-
     <div className="bg-darkbg flex text-frenchgray">
       <Header />
       <Calendar />
