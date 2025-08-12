@@ -6,6 +6,7 @@ import Calendar from "./components/Calendar";
 import Header from "./components/Header";
 
 export default function Home() {
+
   const [loading, setLoading] = useState(true); // Estado de carga.
   const router = useRouter();
 
@@ -17,6 +18,10 @@ export default function Home() {
       // si no hay token, redirigir a login
       router.push("/login");
     } else {
+      const monthData = localStorage.getItem("userMonthData");
+      if (monthData) {
+        setUserMonthData(JSON.parse(monthData)); // Guardamos los datos del mes
+      }
       setLoading(false);
     }
   }, [router]);
@@ -31,7 +36,11 @@ export default function Home() {
   return (
     <div className="bg-darkbg flex text-frenchgray">
       <Header />
-      <Calendar />
+     {/* {userMonthData ? ( */}
+        <Calendar />
+      {/* ) : (
+        <div>No se encontraron datos del mes.</div> // Manejo por si no hay datos
+      )} */}
     </div>
   );
 }

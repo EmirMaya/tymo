@@ -1,19 +1,21 @@
 "use client";
-
 import React, { useState, useEffect, use } from "react";
 import dayjs from "dayjs";
 import "dayjs/locale/es"; // Importa el idioma español
-
 import axios from "axios";
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CheckIcon,
+} from "@heroicons/react/24/solid";
 import ArrowButton from "./ArrowButton";
-import { redirect } from "next/dist/server/api-utils";
+
 dayjs.locale("es");
-const Calendar = () => {
+const Calendar = ({ userDni }) => {
   const [currentDate, setCurrentDate] = useState(dayjs());
+  const [workedDates, setWorkedDates] = useState([]);
   const [holidays, setHolidays] = useState([]);
   const startOfMounth = currentDate.startOf("month");
-  const endOfMonth = currentDate.endOf("month");
   const startDay = startOfMounth.day(); //domingo
   const daysInMonth = currentDate.daysInMonth();
 
@@ -33,7 +35,39 @@ const Calendar = () => {
 
     fetchHolidays();
   }, [currentDate]);
+  //cargar fechas trabajadas desde el back, una vez que haya
+  useEffect(() => {
+    const fetchWorkedDates = async () => {
+      if (!userDni) return;
+      try {
+        const res = await axios.get(`/api/db/calendar/${userDni}`);
+        setWorkedDates(res.data.fechas || []);
+      } catch (err) {
+        console.error("Error al cargar fechas trabajadas: ", err);
+      }
+    };
+    fetchWorkedDates();
+  }, [userDni]);
 
+  //Alternar dia trabajado
+  const toggleWorkedDate = async (dateStr) => {
+    const isWorked = workedDates.includes(dateStr);
+    let updatedDates;
+    if (isWorked) {
+      updatedDates = workedDates.filter((d) => d !== dateStr);
+    } else {
+      updatedDates = [...workedDates, dateStr];
+    }
+    setWorkedDates(updatedDates);
+
+    //guardar en back
+    try {
+      await axios.put(`/api/calendar/${userDni}`, { fechas: updatedDates });
+    } catch (err) {
+      console.error("Error al guardar fechas trabajadas:", err);
+    }
+  };
+  // Construir días calendario
   const days = [];
 
   let totalHours = 0;
@@ -41,6 +75,7 @@ const Calendar = () => {
   for (let d = 1; d <= daysInMonth; d++) {
     const date = currentDate.clone().date(d);
     const dayOfWeek = date.day(); // 1 a 5 = lunes a viernes
+
     // const isHoliday = holidays.some(
     //   (h) => h.fecha === date.format("YYYY-MM-DD")
     // );
@@ -81,7 +116,7 @@ const Calendar = () => {
         />
       </div>
 
-      <div className="grid grid-cols-7 gap-2  text-center">
+      <div className="grid grid-cols-7 gap-2 text-center">
         {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sab"].map((day) => (
           <div key={day} className="font-bold bg-midnightblue rounded-md">
             {day}
@@ -89,46 +124,61 @@ const Calendar = () => {
         ))}
 
         {days.map((day, index) => {
-          const isRealDay = day !== null;
-
-          let isHoliday = false;
-          if (isRealDay) {
-            const date = currentDate.clone().date(day).format("YYYY-MM-DD");
-            isHoliday = holidays.some((d) => d.fecha === date);
+          if (day === null) {
+            return <div key={index} className="h-24"></div>;
           }
+
+          const date = currentDate.clone().date(day);
+          const dateStr = date.format("YYYY-MM-DD");
+
+          const isHoliday = holidays.some((h) => h.fecha === dateStr);
+          const isWorked = workedDates.includes(dateStr);
+          const weeklyDay = date.day();
+          const isWorkDay = weeklyDay >= 1 && weeklyDay <= 5;
 
           return (
             <div
               key={index}
-              className="rounded-md h-24 flex flex-col items-start bg-bluenavydk text-left text-xs"
+              className={`relative rounded-md h-24 flex flex-col items-start text-left text-xs select-none
+        ${isHoliday ? "bg-imperialred text-white" : "bg-bluenavydk text-white"}
+      `}
+              title={
+                isHoliday
+                  ? "Feriado"
+                  : isWorked
+                  ? "Día trabajado"
+                  : "Día no trabajado"
+              }
             >
-              {isRealDay && (
-                <>
-                  <div
-                    className={`text-sm font-bold w-full rounded-t-md px-1 text-white ${
-                      isHoliday ? "bg-imperialred" : "bg-crayolablue"
-                    }`}
-                  >
-                    {day}
-                  </div>
+              <div className="text-sm font-bold w-[26px] rounded-tl-md px-1 text-center bg-crayolablue">
+                {day}
+              </div>
 
-                  {/* Mostrar horario fijo si es día hábil y no feriado */}
-                  {(() => {
-                    const date = currentDate.clone().date(day);
-                    const weeklyDay = date.day(); // 0 = domingo, 1 = lunes, etc.
-                    const isWorkyDay = weeklyDay >= 1 && weeklyDay <= 5;
+              {isWorkDay && (
+                <div className="mt-1">
+                  <div>🕒 9:30 - 15:30</div>
+                  <div>⏱️ 6 hs</div>
+                </div>
+              )}
 
-                    if (isWorkyDay) {
-                      return (
-                        <div className="mt-1">
-                          <div>🕒 9:30 - 15:30</div>
-                          <div>⏱️ 6 hs</div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()}
-                </>
+              {/* Botón pequeño en esquina superior derecha */}
+              {isWorkDay && !isHoliday && (
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation(); // evitar que el click propague al div padre
+                    toggleWorkedDate(dateStr);
+                  }}
+                  className={`absolute top-1 right-1 w-6 h-6 flex items-center justify-center rounded-sm border border-white cursor-pointer
+            ${isWorked ? "bg-green-600" : "bg-transparent"}
+          `}
+                  title={
+                    isWorked
+                      ? "Desmarcar día trabajado"
+                      : "Marcar día trabajado"
+                  }
+                >
+                  {isWorked && <CheckIcon className="w-4 h-4 text-white" />}
+                </div>
               )}
             </div>
           );

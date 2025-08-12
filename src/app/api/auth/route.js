@@ -27,13 +27,10 @@ export const POST = async (req) => {
           expiresIn: "1h",
         });
 
-        // obtener datos del mes
-        const monthFilePath = path.join(process.cwd(), `src/app/api/db/month/april.json`);
-        const monthData = await readFile(monthFilePath, 'utf8');
-        const month = JSON.parse(monthData);
+
 
         // filtro por usuario
-        const userMonthData = month.find(item => item.dni === dni);
+
 
         // ENVIO JWT
         const res = NextResponse.json({
