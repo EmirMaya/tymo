@@ -70,7 +70,7 @@ export const POST = async (req) => {
       );
     }
   } catch (err) {
-    console.error("Error en la autenticación:", err);
+    console.error("Error en la autenticación: ", err);
     return NextResponse.json(
       { success: false, message: "Error en el servidor" },
       { status: 500 }
