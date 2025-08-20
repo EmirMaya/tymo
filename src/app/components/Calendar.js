@@ -41,6 +41,7 @@ const Calendar = ({ userDni }) => {
       if (!userDni) return;
       try {
         const res = await axios.get(`/api/db/calendar/${userDni}`);
+        await axios.put(`/api/calendar/${userDni}`)
         setWorkedDates(res.data.fechas || []);
       } catch (err) {
         console.error("Error al cargar fechas trabajadas: ", err);

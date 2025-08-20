@@ -6,22 +6,24 @@ import Calendar from "./components/Calendar";
 import Header from "./components/Header";
 
 export default function Home() {
-
   const [loading, setLoading] = useState(true); // Estado de carga.
+  const [userDni, setUserDni] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
-    
     const token = localStorage.getItem("token");
+   
 
     if (!token) {
       // si no hay token, redirigir a login
       router.push("/login");
     } else {
-      const monthData = localStorage.getItem("userMonthData");
-      if (monthData) {
-        setUserMonthData(JSON.parse(monthData)); // Guardamos los datos del mes
-      }
+      const user = JSON.parse(localStorage.getItem('userData'));
+      setUserDni(user?.DNI || null);
+      // const monthData = localStorage.getItem("userMonthData");
+      // if (monthData) {
+      //   setUserMonthData(JSON.parse(monthData)); // Guardamos los datos del mes
+      // }
       setLoading(false);
     }
   }, [router]);
@@ -33,14 +35,14 @@ export default function Home() {
       </div>
     );
   }
-  return (
+ return (
     <div className="bg-darkbg flex text-frenchgray">
       <Header />
-     {/* {userMonthData ? ( */}
-        <Calendar />
-      {/* ) : (
-        <div>No se encontraron datos del mes.</div> // Manejo por si no hay datos
-      )} */}
+      {userDni ? (
+        <Calendar userDni={userDni} />
+      ) : (
+        <div>No se encontró el DNI del usuario.</div>
+      )}
     </div>
   );
 }

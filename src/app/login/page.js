@@ -15,11 +15,12 @@ const Login = () => {
     e.preventDefault();
     try {
       const res = await axios.post("/api/auth", { dni, password });
-
+      console.log(res.data);
+      
       if (res.data.success) {
         localStorage.setItem("token", res.data.token);
+        localStorage.setItem('userData', JSON.stringify(res.data.user));
         setAuthenticated(true);
-        setUserMonthData(res.data.userMonthData); 
         setError("");
         window.location.href = "/";
       }

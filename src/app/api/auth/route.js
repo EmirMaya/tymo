@@ -40,7 +40,7 @@ export const POST = async (req) => {
             DNI: user.DNI,
           },
           token,
-          userMonthData,
+ 
         });
 
         //enviar token al front o coockies cookie al front
