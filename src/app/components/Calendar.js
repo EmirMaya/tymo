@@ -37,14 +37,22 @@ const Calendar = ({ userDni }) => {
   }, [currentDate]);
   //cargar fechas trabajadas desde el back, una vez que haya
   useEffect(() => {
+    if (!userDni) return;
     const fetchWorkedDates = async () => {
-      if (!userDni) return;
       try {
-        const res = await axios.get(`/api/db/calendar/${userDni}`);
-        await axios.put(`/api/calendar/${userDni}`)
-        setWorkedDates(res.data.fechas || []);
+        const res = await axios.get(`/api/calendar/${userDni}`);
+        if (res.data.success) {
+          setWorkedDates(res.data.fechas || []);
+        } else {
+          console.warn(
+            "No se encontraron fechas para este user: ",
+            res.data.message
+          );
+          setWorkedDates([]);
+        }
       } catch (err) {
         console.error("Error al cargar fechas trabajadas: ", err);
+        setWorkedDates([]);
       }
     };
     fetchWorkedDates();
@@ -52,22 +60,34 @@ const Calendar = ({ userDni }) => {
 
   //Alternar dia trabajado
   const toggleWorkedDate = async (dateStr) => {
+    if (!userDni) return; // no hacemos nada si no hay DNI
+
+    // Verificamos si la fecha ya está marcada
     const isWorked = workedDates.includes(dateStr);
-    let updatedDates;
-    if (isWorked) {
-      updatedDates = workedDates.filter((d) => d !== dateStr);
-    } else {
-      updatedDates = [...workedDates, dateStr];
-    }
+    const updatedDates = isWorked
+      ? workedDates.filter((d) => d !== dateStr)
+      : [...workedDates, dateStr];
+
+    // Actualizamos la UI inmediatamente (optimistic update)
     setWorkedDates(updatedDates);
 
-    //guardar en back
     try {
-      await axios.put(`/api/calendar/${userDni}`, { fechas: updatedDates });
+      const res = await axios.put(`/api/calendar/${userDni}`, {
+        fechas: updatedDates,
+      });
+
+      if (!res.data.success) {
+        // Si el backend no actualizó, revertimos cambios en UI
+        console.warn("No se pudo actualizar en el servidor:", res.data.message);
+        setWorkedDates(workedDates);
+      }
     } catch (err) {
       console.error("Error al guardar fechas trabajadas:", err);
+      // Revertimos cambios en la UI si hubo error
+      setWorkedDates(workedDates);
     }
   };
+
   // Construir días calendario
   const days = [];
 
