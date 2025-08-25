@@ -113,10 +113,10 @@ const Calendar = ({ userDni }) => {
     
     // solo contamos en el mes actual
     if (
-      date.month() === currentDate.month &&
+      date.month() === currentDate.month() &&
       date.year() === currentDate.year()
     ) {
-      acc = +6; //sumamos 6 horas por dia habil trabajado
+      acc += 6; //sumamos 6 horas por dia habil trabajado
     }
 
     return acc;
