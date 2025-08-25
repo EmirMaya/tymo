@@ -91,26 +91,10 @@ const Calendar = ({ userDni }) => {
   // Construir días calendario
   const days = [];
 
-  // let totalHours = 0;
-
-  // for (let d = 1; d <= daysInMonth; d++) {
-  //   const date = currentDate.clone().date(d);
-  //   const dayOfWeek = date.day(); // 1 a 5 = lunes a viernes
-
-  //   // const isHoliday = holidays.some(
-  //   //   (h) => h.fecha === date.format("YYYY-MM-DD")
-  //   // );
-
-  //   if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-  //     totalHours += 6;
-  //   }
-  // }
-
   //  dias contados y marcadas horas
   const totalHours = workedDates.reduce((acc, dateStr) => {
     const date = dayjs(dateStr);
-    console.log('DATE: ', date);
-    
+
     // solo contamos en el mes actual
     if (
       date.month() === currentDate.month() &&
@@ -121,9 +105,6 @@ const Calendar = ({ userDni }) => {
 
     return acc;
   }, 0);
-
-  console.log('HORAS TRABAJADAS: ',totalHours);
-  
 
   for (let i = 0; i < startDay; i++) {
     days.push(null); // dias vacios al principio
@@ -139,14 +120,14 @@ const Calendar = ({ userDni }) => {
   const handleNextMonth = () => setCurrentDate(currentDate.add(1, "month"));
 
   return (
-    <div className="mt-7 p-6 w-screen">
-      <div className="flex justify-between items-center mb-4">
+    <div className="mt-7 p-6 w-screen ">
+      <div className="flex justify-between items-center mb-4 w-1/3 border border-bluenavydk bg-bluenavydk rounded-md">
         <ArrowButton
           onClick={handlePrevMonth}
           Icon={ChevronLeftIcon}
           direction="left"
         />
-        <h2 className="text-2xl font-bold mb-4">
+        <h2 className="text-2xl font-bold text-linencream w-full text-center">
           {currentDate.format("MMMM YYYY")}
         </h2>
         <ArrowButton
@@ -156,7 +137,7 @@ const Calendar = ({ userDni }) => {
         />
       </div>
 
-      <div className="grid grid-cols-7 gap-2 text-center">
+      <div className="grid grid-cols-7 gap-2 text-center text-linencream">
         {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sab"].map((day) => (
           <div key={day} className="font-bold bg-midnightblue rounded-md">
             {day}
@@ -179,9 +160,7 @@ const Calendar = ({ userDni }) => {
           return (
             <div
               key={index}
-              className={`relative rounded-md h-24 flex flex-col items-start text-left text-xs select-none
-        ${isHoliday ? "bg-imperialred text-white" : "bg-bluenavydk text-white"}
-      `}
+              className={`relative rounded-md h-24 flex flex-col items-start text-left text-xs select-none bg-bluenavydk`}
               title={
                 isHoliday
                   ? "Feriado"
@@ -190,7 +169,15 @@ const Calendar = ({ userDni }) => {
                   : "Día no trabajado"
               }
             >
-              <div className="text-sm font-bold w-[26px] rounded-tl-md px-1 text-center bg-crayolablue">
+              <div
+                className={`text-sm font-bold w-[26px] rounded-tl-md px-1 text-center 
+                 ${
+                   isHoliday
+                     ? "bg-imperialred text-white"
+                     : "bg-crayolablue text-white"
+                 }
+                `}
+              >
                 {day}
               </div>
 
@@ -225,8 +212,8 @@ const Calendar = ({ userDni }) => {
         })}
       </div>
       {totalHours > 0 && (
-        <div className="mt-4 bg-teal-600 text-white p-2 rounded">
-          Total del mes: {totalHours} hs
+        <div className="mt-4 bg-bluenavydk text-white p-2 rounded">
+          Horas mensuales trabajadas: {totalHours} hs
         </div>
       )}
     </div>

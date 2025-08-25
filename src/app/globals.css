@@ -22,6 +22,7 @@
     --color-imperialred: #F03A47;
     --color-crayolablue: #5E79FD;
     --color-midnightblue: #0C3746;
+    --color-linencream: #F9EAE1;
 }
 
 @media (prefers-color-scheme: light) {
