@@ -195,8 +195,8 @@ const Calendar = ({ userDni }) => {
                     e.stopPropagation(); // evitar que el click propague al div padre
                     toggleWorkedDate(dateStr);
                   }}
-                  className={`absolute top-1 right-1 w-6 h-6 flex items-center justify-center rounded-sm border border-white cursor-pointer
-            ${isWorked ? "bg-green-600" : "bg-transparent"}
+                  className={`absolute top-1 right-1 w-6 h-6 flex items-center justify-center rounded-sm  cursor-pointer
+            ${isWorked ? "bg-aeroblue" : "bg-darkbg"}
           `}
                   title={
                     isWorked
@@ -204,7 +204,7 @@ const Calendar = ({ userDni }) => {
                       : "Marcar día trabajado"
                   }
                 >
-                  {isWorked && <CheckIcon className="w-4 h-4 text-white" />}
+                  {isWorked && <CheckIcon className="w-6 h-6 text-white" />}
                 </div>
               )}
             </div>
