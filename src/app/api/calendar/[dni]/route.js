@@ -7,9 +7,9 @@ const filePath = path.join(
   "src/app/api/db/calendar/calendar.json"
 );
 
-export const GET = async (req, { params }) => {
+export const GET = async (req, context) => {
   try {
-    const { dni } = params;
+    const dni = context.params.dni;
     const fileData = await readFile(filePath, "utf8");
     const calendar = JSON.parse(fileData);
     const userData = calendar.find((u) => u.DNI === dni);
@@ -29,9 +29,9 @@ export const GET = async (req, { params }) => {
   }
 };
 
-export const PUT = async (req, { params }) => {
+export const PUT = async (req, context) => {
   try {
-    const { dni } = params;
+    const dni = context.params.dni;
     const body = await req.json();
     const { fechas } = body;
 

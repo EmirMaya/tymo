@@ -91,20 +91,39 @@ const Calendar = ({ userDni }) => {
   // Construir días calendario
   const days = [];
 
-  let totalHours = 0;
+  // let totalHours = 0;
 
-  for (let d = 1; d <= daysInMonth; d++) {
-    const date = currentDate.clone().date(d);
-    const dayOfWeek = date.day(); // 1 a 5 = lunes a viernes
+  // for (let d = 1; d <= daysInMonth; d++) {
+  //   const date = currentDate.clone().date(d);
+  //   const dayOfWeek = date.day(); // 1 a 5 = lunes a viernes
 
-    // const isHoliday = holidays.some(
-    //   (h) => h.fecha === date.format("YYYY-MM-DD")
-    // );
+  //   // const isHoliday = holidays.some(
+  //   //   (h) => h.fecha === date.format("YYYY-MM-DD")
+  //   // );
 
-    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-      totalHours += 6;
+  //   if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+  //     totalHours += 6;
+  //   }
+  // }
+
+  //  dias contados y marcadas horas
+  const totalHours = workedDates.reduce((acc, dateStr) => {
+    const date = dayjs(dateStr);
+    console.log('DATE: ', date);
+    
+    // solo contamos en el mes actual
+    if (
+      date.month() === currentDate.month &&
+      date.year() === currentDate.year()
+    ) {
+      acc = +6; //sumamos 6 horas por dia habil trabajado
     }
-  }
+
+    return acc;
+  }, 0);
+
+  console.log('HORAS TRABAJADAS: ',totalHours);
+  
 
   for (let i = 0; i < startDay; i++) {
     days.push(null); // dias vacios al principio
