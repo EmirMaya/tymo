@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import dayjs from "dayjs";
 import "dayjs/locale/es"; // Importa el idioma español
 import axios from "axios";
@@ -189,14 +189,14 @@ const Calendar = ({ userDni }) => {
               )}
 
               {/* Botón pequeño en esquina superior derecha */}
-              {isWorkDay && !isHoliday && (
+              
                 <div
                   onClick={(e) => {
                     e.stopPropagation(); // evitar que el click propague al div padre
                     toggleWorkedDate(dateStr);
                   }}
                   className={`absolute top-1 right-1 w-6 h-6 flex items-center justify-center rounded-sm  cursor-pointer
-            ${isWorked ? "bg-aeroblue" : "bg-darkbg"}
+            ${isWorked ? "bg-aeroblue" : "bg-darkbg hover:bg-aeroblue"}
           `}
                   title={
                     isWorked
@@ -206,7 +206,7 @@ const Calendar = ({ userDni }) => {
                 >
                   {isWorked && <CheckIcon className="w-6 h-6 text-white" />}
                 </div>
-              )}
+              
             </div>
           );
         })}
