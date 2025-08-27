@@ -9,17 +9,17 @@ const Login = () => {
   const [authenticated, setAuthenticated] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-
+  const [user, setUser] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const res = await axios.post("/api/auth", { dni, password });
-      console.log(res.data);
-      
+      // console.log("DATA: ", res.data);
+
       if (res.data.success) {
-        localStorage.setItem("token", res.data.token);
-        localStorage.setItem('userData', JSON.stringify(res.data.user));
+        console.log("Login OK, user:", res.data.user);
+        setUser(res.data.user);
         setAuthenticated(true);
         setError("");
         window.location.href = "/";
