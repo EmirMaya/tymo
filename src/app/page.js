@@ -41,7 +41,7 @@ export default function Home() {
       {userDni ? (
         <Calendar userDni={userDni} />
       ) : (
-        <div>No se encontró el DNI del usuario.</div>
+        <div>No se encontró el DNI.</div>
       )}
     </div>
   );
