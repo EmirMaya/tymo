@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { ClipLoader } from "react-spinners";
 import Calendar from "./components/Calendar";
 import Header from "./components/Header";
+import axios from "axios";
 
 export default function Home() {
   const [loading, setLoading] = useState(true); // Estado de carga.
@@ -11,21 +12,26 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-   
+    const checkAuth = async () => {
+      try {
+        const { data } = await axios.get("/api/auth/me", {
+          withCredentials: true,
+        });
 
-    if (!token) {
-      // si no hay token, redirigir a login
-      router.push("/login");
-    } else {
-      const user = JSON.parse(localStorage.getItem('userData'));
-      setUserDni(user?.DNI || null);
-      // const monthData = localStorage.getItem("userMonthData");
-      // if (monthData) {
-      //   setUserMonthData(JSON.parse(monthData)); // Guardamos los datos del mes
-      // }
-      setLoading(false);
-    }
+        if (data.authenticated) {
+          setUserDni(data.user.dni);
+        } else {
+          router.replace("/login"); // mejor que push para no mantener historial
+        }
+      } catch (err) {
+        console.error("Error checking auth:", err);
+        router.replace("/login");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
   }, [router]);
 
   if (loading) {
@@ -35,7 +41,7 @@ export default function Home() {
       </div>
     );
   }
- return (
+  return (
     <div className="bg-darkbg flex text-frenchgray">
       <Header />
       {userDni ? (

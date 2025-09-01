@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 
 const Login = () => {
   const [dni, setDni] = useState("");
@@ -10,6 +11,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [user, setUser] = useState(null);
+  const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,11 +20,10 @@ const Login = () => {
       // console.log("DATA: ", res.data);
 
       if (res.data.success) {
-        console.log("Login OK, user:", res.data.user);
         setUser(res.data.user);
         setAuthenticated(true);
         setError("");
-        window.location.href = "/";
+        router.push("/");
       }
     } catch (err) {
       setAuthenticated(false);
