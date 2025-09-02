@@ -8,6 +8,17 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  const logout = async () => {
+    try {
+      // borrado de coockie
+      await axios.post('/api/auth/logout', {}, {withCredentials: true});
+      setUser(null);
+      router.replace('/login');
+    } catch (err) {
+      console.err('Error al cerrar sesion: ', err);
+    }
+  }
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -32,5 +43,5 @@ export const useAuth = () => {
     checkAuth();
   }, [router]);
 
-  return { user, loading };
+  return { user, loading, logout };
 };
