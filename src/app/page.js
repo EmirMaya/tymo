@@ -17,15 +17,11 @@ export default function Home() {
   }
 
   
-  if (!user) {
-    // Si no hay usuario, el hook ya debería redirigir, pero dejamos fallback
-    return null;
-  }
 
   return (
     <div className="bg-darkbg flex text-frenchgray">
       <Header />
-      <Calendar userDni={user.dni} />
+      {user ? <Calendar userDni={user.dni} /> : <div>No se encontró el DNI.</div>}
     </div>
   );
   

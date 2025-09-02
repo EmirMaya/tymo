@@ -1,23 +1,14 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, createContext, useContext } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
-export const useAuth = () => {
+const AuthContext = createContext({});
+
+export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-
-  const logout = async () => {
-    try {
-      // borrado de coockie
-      await axios.post('/api/auth/logout', {}, {withCredentials: true});
-      setUser(null);
-      router.replace('/login');
-    } catch (err) {
-      console.err('Error al cerrar sesion: ', err);
-    }
-  }
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -43,5 +34,22 @@ export const useAuth = () => {
     checkAuth();
   }, [router]);
 
-  return { user, loading, logout };
+  const logout = async () => {
+    try {
+      // borrado de coockie
+      await axios.post("/api/auth/logout", {}, { withCredentials: true });
+      setUser(null);
+      router.replace("/login");
+    } catch (err) {
+      console.err("Error al cerrar sesion: ", err);
+    }
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, loading, setUser, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
+
+export const useAuth = () => useContext(AuthContext);

@@ -3,30 +3,33 @@ import React, { useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const [dni, setDni] = useState("");
   const [password, setPassword] = useState("");
-  const [authenticated, setAuthenticated] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const [user, setUser] = useState(null);
+  const {setUser} = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e) => {
+
     e.preventDefault();
+    if (!dni || !password) {
+    setError("Por favor completa todos los campos");
+    return;
+  }
     try {
       const res = await axios.post("/api/auth", { dni, password });
       // console.log("DATA: ", res.data);
 
       if (res.data.success) {
         setUser(res.data.user);
-        setAuthenticated(true);
         setError("");
         router.push("/");
       }
     } catch (err) {
-      setAuthenticated(false);
       setError("DNI o Contraseña Incorrecta");
     }
   };
