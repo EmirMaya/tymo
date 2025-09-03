@@ -1,27 +1,23 @@
 import { NextResponse } from "next/server";
-import { readFile, writeFile } from "fs/promises";
-import path from "path";
 
-const filePath = path.join(
-  process.cwd(),
-  "src/app/api/db/calendar/calendar.json"
-);
+import pool from "@/app/api/db/mysql";
 
 export const GET = async (req, context) => {
   try {
     const dni = context.params.dni;
-    const fileData = await readFile(filePath, "utf8");
-    const calendar = JSON.parse(fileData);
-    const userData = calendar.find((u) => u.DNI === dni);
-    if (!userData) {
-      return NextResponse.json(
-        { success: false, message: "Usuario no encontrado" },
-        { status: 404 }
-      );
-    }
-    return NextResponse.json({ success: true, fechas: userData.fechas || [] });
+
+    const [rows] = await pool.query(
+      "SELECT worked_date FROM worked_dates WHERE user_dni = ?",
+      [dni]
+    );
+
+    const fechas = rows.map(
+      (row) => row.worked_date.toISOString().split("T")[0]
+    ); // yyyy-mm-dd
+
+    return NextResponse.json({ success: true, fechas });
   } catch (err) {
-    console.error("Error al leer calendario:", err);
+    console.error("Error al leer calendario: ", err);
     return NextResponse.json(
       { success: false, message: "Error servidor" },
       { status: 500 }
@@ -33,23 +29,38 @@ export const PUT = async (req, context) => {
   try {
     const dni = context.params.dni;
     const body = await req.json();
-    const { fechas } = body;
+    const { fechas } = body; // array de fechas nuevas que el usuario quiere tener
 
-    const fileData = await readFile(filePath, "utf8");
-    const calendar = JSON.parse(fileData);
+    // Obtenemos fechas actuales si es que las hay
+    const [currentRows] = await pool.query(
+      "SELECT worked_date FROM worked_dates WHERE user_dni = ?",
+      [dni]
+    );
 
-    const userIndex = calendar.findIndex((u) => u.DNI === dni);
-    if (userIndex === -1) {
-      return NextResponse.json(
-        { success: false, message: "Usuario no encontrado" },
-        { status: 404 }
+    const currentDates = currentRows.map(
+      (row) => row.worked_date.toISOString().split("T")[0]
+    );
+
+    //calculamos que fechas agregar y cuales eliminar
+    const fechasParaAgregar = fechas.filter((d) => !currentDates.includes(d));
+    const fechasParaEliminar = currentDates.filter((d) => !fechas.includes(d));
+
+    //Insertar nuevas fechas
+    if (fechasParaAgregar.length > 0) {
+      const values = fechasParaAgregar.map((d) => [dni, d, 6]);
+      await pool.query(
+        "INSERT INTO worked_dates (user_dni, worked_date, hours) VALUES ?",
+        [values]
       );
     }
-    // Actualizamos las fechas
-    calendar[userIndex].fechas = fechas;
 
-    // Guardamos de nuevo en el JSON
-    await writeFile(filePath, JSON.stringify(calendar, null, 2), "utf8");
+    //Eliminar fechas desmarcadas
+    if (fechasParaEliminar.length > 0) {
+      await pool.query(
+        "DELETE FROM worked_dates WHERE user_dni = ? AND worked_date IN (?)",
+        [dni, fechasParaEliminar]
+      );
+    }
     return NextResponse.json({ success: true, fechas });
   } catch (err) {
     console.error("Error al guardar calendario:", err);
