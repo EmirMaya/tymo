@@ -18,6 +18,19 @@ const Calendar = ({ userDni }) => {
   const startOfMounth = currentDate.startOf("month");
   const startDay = startOfMounth.day(); //domingo
   const daysInMonth = currentDate.daysInMonth();
+  const [weekendHours, setWeekendHours] = useState({});
+
+  const getDayHours = (dateStr) => {
+    const date = dayjs(dateStr);
+    const weeklyDay = date.day();
+    const isWorkDay = weeklyDay >= 1 && weeklyDay <= 5;
+    const isHoliday = holidays.some((h) => h.fecha === dateStr);
+
+    if (isHoliday && workedDates.includes(dateStr)) return 12;
+    if (isHoliday && !workedDates.includes(dateStr) && isWorkDay) return 6;
+    if (!isHoliday && workedDates.includes(dateStr)) return 6;
+    return 0;
+  };
 
   useEffect(() => {
     const fetchHolidays = async () => {
@@ -162,7 +175,7 @@ const Calendar = ({ userDni }) => {
           const isWorked = workedDates.includes(dateStr);
           const weeklyDay = date.day();
           const isWorkDay = weeklyDay >= 1 && weeklyDay <= 5;
-
+          const isWeekend = weeklyDay === 0 || weeklyDay === 6;
           return (
             <div
               key={index}
@@ -189,17 +202,30 @@ const Calendar = ({ userDni }) => {
 
               {/* Mostrar horas */}
               <div className="mt-1">
-                {(() => {
-                  const isHoliday = holidays.some((h) => h.fecha === dateStr);
-                  const weeklyDay = date.day();
-                  const isWorkDay = weeklyDay >= 1 && weeklyDay <= 5;
-
-                  if (isHoliday && isWorked) return <div>⏱️ 12 hs</div>; // feriado trabajado
-                  if (isHoliday && !isWorked && isWorkDay)
-                    return <div>⏱️ 6 hs</div>; // feriado no trabajado en semana
-                  if (!isHoliday && isWorked) return <div>⏱️ 6 hs</div>; // dia normal trabajado
-                  return null; // si no se cumple nada, no mostramos horas
-                })()}
+                {isWorked && isWeekend ? (
+                  <select
+                    value={weekendHours[dateStr] || "8:00"}
+                    onChange={(e) =>
+                      setWeekendHours({
+                        ...weekendHours,
+                        [dateStr]: e.target.value,
+                      })
+                    }
+                    className="text-xs rounded px-1 py-0.5 bg-darkbg text-white"
+                  >
+                    {Array.from({ length: (16 - 8) * 2 + 1 }, (_, i) => {
+                      const hour = Math.floor((8 * 2 + i) / 2);
+                      const minute = i % 2 === 0 ? "00" : "30";
+                      return `${hour}:${minute}`;
+                    }).map((time) => (
+                      <option key={time} value={time}>
+                        {time}
+                      </option>
+                    ))}
+                  </select>
+                ) : getDayHours(dateStr) > 0 ? (
+                  <div>⏱️ {getDayHours(dateStr)} hs</div>
+                ) : null}
               </div>
 
               {/* Botón pequeño en esquina superior derecha */}
