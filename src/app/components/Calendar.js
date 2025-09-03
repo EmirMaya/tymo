@@ -98,27 +98,27 @@ const Calendar = ({ userDni }) => {
     days.push(d);
   }
 
-//Calcular horas con reglas de feriados
-let totalHours = 0;
+  //Calcular horas con reglas de feriados
+  let totalHours = 0;
 
-for (let d =1;d <= daysInMonth;d++) {
-  const date = currentDate.clone().date(d);
-  const dateStr = date.format('YYYY-MM-DD');
-  const isWorked = workedDates.includes(dateStr);
-  const isHoliday = holidays.some(h => h.fecha === dateStr);
-  const weeklyDay = date.day(); //0 domingo 1 lunes y asi
-  const isWorkDay = weeklyDay >= 1 && weeklyDay <= 5;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = currentDate.clone().date(d);
+    const dateStr = date.format("YYYY-MM-DD");
+    const isWorked = workedDates.includes(dateStr);
+    const isHoliday = holidays.some((h) => h.fecha === dateStr);
+    const weeklyDay = date.day(); //0 domingo 1 lunes y asi
+    const isWorkDay = weeklyDay >= 1 && weeklyDay <= 5;
 
-  if(isHoliday && isWorked) {
-    totalHours += 12; //feriado trabajado
-  } else if (isHoliday && !isWorked && isWorkDay) { // SI ES FERIADO, NO TRABAJADO Y ES DIA DE SEMANA SON 6 HORAS
-    totalHours += 6;
-  } else if (!isHoliday && isWorked) { // dia de semana trabajado normal 6 horas
-    totalHours += 6;
+    if (isHoliday && isWorked) {
+      totalHours += 12; //feriado trabajado
+    } else if (isHoliday && !isWorked && isWorkDay) {
+      // SI ES FERIADO, NO TRABAJADO Y ES DIA DE SEMANA SON 6 HORAS
+      totalHours += 6;
+    } else if (!isHoliday && isWorked) {
+      // dia de semana trabajado normal 6 horas
+      totalHours += 6;
+    }
   }
-}
-
-
 
   //   CAMBIAR DE MESES PARA ATRAS Y ADELANTE
   const handlePrevMonth = () =>
@@ -187,12 +187,20 @@ for (let d =1;d <= daysInMonth;d++) {
                 {day}
               </div>
 
-              {isWorkDay && (
-                <div className="mt-1">
-                  <div>🕒 9:30 - 15:30</div>
-                  <div>⏱️ 6 hs</div>
-                </div>
-              )}
+              {/* Mostrar horas */}
+              <div className="mt-1">
+                {(() => {
+                  const isHoliday = holidays.some((h) => h.fecha === dateStr);
+                  const weeklyDay = date.day();
+                  const isWorkDay = weeklyDay >= 1 && weeklyDay <= 5;
+
+                  if (isHoliday && isWorked) return <div>⏱️ 12 hs</div>; // feriado trabajado
+                  if (isHoliday && !isWorked && isWorkDay)
+                    return <div>⏱️ 6 hs</div>; // feriado no trabajado en semana
+                  if (!isHoliday && isWorked) return <div>⏱️ 6 hs</div>; // dia normal trabajado
+                  return null; // si no se cumple nada, no mostramos horas
+                })()}
+              </div>
 
               {/* Botón pequeño en esquina superior derecha */}
 
