@@ -90,22 +90,6 @@ const Calendar = ({ userDni }) => {
 
   // Construir días calendario
   const days = [];
-
-  //  dias contados y marcadas horas
-  const totalHours = workedDates.reduce((acc, dateStr) => {
-    const date = dayjs(dateStr);
-
-    // solo contamos en el mes actual
-    if (
-      date.month() === currentDate.month() &&
-      date.year() === currentDate.year()
-    ) {
-      acc += 6; //sumamos 6 horas por dia habil trabajado
-    }
-
-    return acc;
-  }, 0);
-
   for (let i = 0; i < startDay; i++) {
     days.push(null); // dias vacios al principio
   }
@@ -113,6 +97,28 @@ const Calendar = ({ userDni }) => {
   for (let d = 1; d <= daysInMonth; d++) {
     days.push(d);
   }
+
+//Calcular horas con reglas de feriados
+let totalHours = 0;
+
+for (let d =1;d <= daysInMonth;d++) {
+  const date = currentDate.clone().date(d);
+  const dateStr = date.format('YYYY-MM-DD');
+  const isWorked = workedDates.includes(dateStr);
+  const isHoliday = holidays.some(h => h.fecha === dateStr);
+  const weeklyDay = date.day(); //0 domingo 1 lunes y asi
+  const isWorkDay = weeklyDay >= 1 && weeklyDay <= 5;
+
+  if(isHoliday && isWorked) {
+    totalHours += 12; //feriado trabajado
+  } else if (isHoliday && !isWorked && isWorkDay) { // SI ES FERIADO, NO TRABAJADO Y ES DIA DE SEMANA SON 6 HORAS
+    totalHours += 6;
+  } else if (!isHoliday && isWorked) { // dia de semana trabajado normal 6 horas
+    totalHours += 6;
+  }
+}
+
+
 
   //   CAMBIAR DE MESES PARA ATRAS Y ADELANTE
   const handlePrevMonth = () =>
@@ -189,24 +195,21 @@ const Calendar = ({ userDni }) => {
               )}
 
               {/* Botón pequeño en esquina superior derecha */}
-              
-                <div
-                  onClick={(e) => {
-                    e.stopPropagation(); // evitar que el click propague al div padre
-                    toggleWorkedDate(dateStr);
-                  }}
-                  className={`absolute top-1 right-1 w-6 h-6 flex items-center justify-center rounded-sm  cursor-pointer
+
+              <div
+                onClick={(e) => {
+                  e.stopPropagation(); // evitar que el click propague al div padre
+                  toggleWorkedDate(dateStr);
+                }}
+                className={`absolute top-1 right-1 w-6 h-6 flex items-center justify-center rounded-sm  cursor-pointer
             ${isWorked ? "bg-aeroblue" : "bg-darkbg hover:bg-aeroblue"}
           `}
-                  title={
-                    isWorked
-                      ? "Desmarcar día trabajado"
-                      : "Marcar día trabajado"
-                  }
-                >
-                  {isWorked && <CheckIcon className="w-6 h-6 text-white" />}
-                </div>
-              
+                title={
+                  isWorked ? "Desmarcar día trabajado" : "Marcar día trabajado"
+                }
+              >
+                {isWorked && <CheckIcon className="w-6 h-6 text-white" />}
+              </div>
             </div>
           );
         })}
