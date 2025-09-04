@@ -202,7 +202,7 @@ const Calendar = ({ userDni }) => {
 
               {/* Mostrar horas */}
               <div className="mt-1">
-                {isWorked && isWeekend ? (
+                {isWorked && isWeekend && (
                   <select
                     value={weekendHours[dateStr] || "8:00"}
                     onChange={(e) =>
@@ -223,9 +223,12 @@ const Calendar = ({ userDni }) => {
                       </option>
                     ))}
                   </select>
-                ) : getDayHours(dateStr) > 0 ? (
-                  <div>⏱️ {getDayHours(dateStr)} hs</div>
-                ) : null}
+                )}
+                {/* Mostrar horas siempre que corresponda */}
+                {getDayHours(dateStr) > 0 && (
+                  <div className="mt-1">⏱️ {getDayHours(dateStr)} hs</div>
+                )}
+               D
               </div>
 
               {/* Botón pequeño en esquina superior derecha */}
