@@ -226,7 +226,7 @@ const Calendar = ({ userDni }) => {
                 )}
                 {/* Mostrar horas siempre que corresponda */}
                 {getDayHours(dateStr) > 0 && (
-                  <div className="mt-1">⏱️ {getDayHours(dateStr)} hs</div>
+                  <div className="mt-1 text-base">⏱️ {getDayHours(dateStr)} hs</div>
                 )}
                D
               </div>
