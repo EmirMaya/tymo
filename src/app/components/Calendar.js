@@ -25,10 +25,27 @@ const Calendar = ({ userDni }) => {
     const weeklyDay = date.day();
     const isWorkDay = weeklyDay >= 1 && weeklyDay <= 5;
     const isHoliday = holidays.some((h) => h.fecha === dateStr);
+    const isWorked = workedDates.includes(dateStr);
+    const isWeekend = weeklyDay === 0 || weeklyDay === 6;
+    // Fines de semana trabajados
+    if (isWeekend && isWorked) {
+      const ingreso = weekendHours[dateStr] || "8:00"; // horario por defecto 8:00
+      const [hour, minute] = ingreso.split(":").map(Number);
 
-    if (isHoliday && workedDates.includes(dateStr)) return 12;
-    if (isHoliday && !workedDates.includes(dateStr) && isWorkDay) return 6;
-    if (!isHoliday && workedDates.includes(dateStr)) return 6;
+      // Sábado a partir de 13 → doble, Domingo → siempre doble
+      if ((weeklyDay === 6 && hour >= 13) || weeklyDay === 0) {
+        return 12;
+      }
+      return 6; // sábado antes de 13
+    }
+
+    // Feriados
+    if (isHoliday && isWorked) return 12;
+    if (isHoliday && !isWorked && isWorkDay) return 6;
+
+    // Días normales de semana
+    if (!isHoliday && isWorked) return 6;
+
     return 0;
   };
 
@@ -118,19 +135,9 @@ const Calendar = ({ userDni }) => {
     const date = currentDate.clone().date(d);
     const dateStr = date.format("YYYY-MM-DD");
     const isWorked = workedDates.includes(dateStr);
-    const isHoliday = holidays.some((h) => h.fecha === dateStr);
-    const weeklyDay = date.day(); //0 domingo 1 lunes y asi
-    const isWorkDay = weeklyDay >= 1 && weeklyDay <= 5;
+    const weeklyDay = date.day();
 
-    if (isHoliday && isWorked) {
-      totalHours += 12; //feriado trabajado
-    } else if (isHoliday && !isWorked && isWorkDay) {
-      // SI ES FERIADO, NO TRABAJADO Y ES DIA DE SEMANA SON 6 HORAS
-      totalHours += 6;
-    } else if (!isHoliday && isWorked) {
-      // dia de semana trabajado normal 6 horas
-      totalHours += 6;
-    }
+    totalHours += getDayHours(dateStr); // ahora getDayHours contempla fines de semana
   }
 
   //   CAMBIAR DE MESES PARA ATRAS Y ADELANTE
@@ -226,9 +233,10 @@ const Calendar = ({ userDni }) => {
                 )}
                 {/* Mostrar horas siempre que corresponda */}
                 {getDayHours(dateStr) > 0 && (
-                  <div className="mt-1 text-base">⏱️ {getDayHours(dateStr)} hs</div>
+                  <div className="mt-1 text-base">
+                    ⏱️ {getDayHours(dateStr)} hs
+                  </div>
                 )}
-               D
               </div>
 
               {/* Botón pequeño en esquina superior derecha */}
