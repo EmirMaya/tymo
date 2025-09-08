@@ -27,16 +27,30 @@ const Calendar = ({ userDni }) => {
     const isHoliday = holidays.some((h) => h.fecha === dateStr);
     const isWorked = workedDates.includes(dateStr);
     const isWeekend = weeklyDay === 0 || weeklyDay === 6;
-    // Fines de semana trabajados
-    if (isWeekend && isWorked) {
-      const ingreso = weekendHours[dateStr] || "8:00"; // horario por defecto 8:00
-      const [hour, minute] = ingreso.split(":").map(Number);
 
-      // Sábado a partir de 13 → doble, Domingo → siempre doble
-      if ((weeklyDay === 6 && hour >= 13) || weeklyDay === 0) {
-        return 12;
+    if (isWeekend && isWorked) {
+      const ingresoStr = weekendHours[dateStr] || "8:00";
+      const [ingresoHour, ingresoMinute] = ingresoStr.split(":").map(Number);
+
+      if (weeklyDay === 6) {
+        // Sábado
+        const jornadaTotal = 6; // siempre 6 horas
+        const horaInicioJornada = ingresoHour + ingresoMinute / 60;
+        const horaFinJornada = horaInicioJornada + jornadaTotal;
+
+        // Horas antes de las 13
+        const horasNormales = Math.max(
+          0,
+          Math.min(13, horaFinJornada) - horaInicioJornada
+        );
+        // Horas después de las 13 → doble
+        const horasDobles =
+          Math.max(0, horaFinJornada - Math.max(13, horaInicioJornada)) * 2;
+
+        return horasNormales + horasDobles;
       }
-      return 6; // sábado antes de 13
+
+      if (weeklyDay === 0) return 12; // domingo siempre doble
     }
 
     // Feriados
