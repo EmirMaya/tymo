@@ -200,7 +200,7 @@ const Calendar = ({ userDni }) => {
           return (
             <div
               key={index}
-              className={`relative rounded-md h-24 flex flex-col items-start text-left text-xs select-none bg-bluenavydk`}
+              className={`relative rounded-md h-28 flex flex-col items-start text-left text-xs select-none bg-bluenavydk`}
               title={
                 isHoliday
                   ? "Feriado"
@@ -224,31 +224,34 @@ const Calendar = ({ userDni }) => {
               {/* Mostrar horas */}
               <div className="mt-1">
                 {isWorked && isWeekend && (
-                  <select
-                    value={weekendHours[dateStr] || "8:00"}
-                    onChange={(e) =>
-                      setWeekendHours({
-                        ...weekendHours,
-                        [dateStr]: e.target.value,
-                      })
-                    }
-                    className="text-xs rounded px-1 py-0.5 bg-darkbg text-white"
-                  >
-                    {Array.from({ length: (16 - 8) * 2 + 1 }, (_, i) => {
-                      const hour = Math.floor((8 * 2 + i) / 2);
-                      const minute = i % 2 === 0 ? "00" : "30";
-                      return `${hour}:${minute}`;
-                    }).map((time) => (
-                      <option key={time} value={time}>
-                        {time}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="ml-2">
+                    <h4 className="mb-1 ml-2">Ingreso</h4>
+                    <select
+                      value={weekendHours[dateStr] || "8:00"}
+                      onChange={(e) =>
+                        setWeekendHours({
+                          ...weekendHours,
+                          [dateStr]: e.target.value,
+                        })
+                      }
+                      className="text-xs rounded px-1 py-0.5 bg-darkbg text-white"
+                    >
+                      {Array.from({ length: (16 - 8) * 2 + 1 }, (_, i) => {
+                        const hour = Math.floor((8 * 2 + i) / 2);
+                        const minute = i % 2 === 0 ? "00" : "30";
+                        return `${hour}:${minute}`;
+                      }).map((time) => (
+                        <option key={time} value={time}>
+                          {time}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 )}
                 {/* Mostrar horas siempre que corresponda */}
                 {getDayHours(dateStr) > 0 && (
-                  <div className="mt-1 text-base">
-                    ⏱️ {getDayHours(dateStr)} hs
+                  <div className="mt-1 ml-3">
+                  ⏱️{getDayHours(dateStr)} hs
                   </div>
                 )}
               </div>
