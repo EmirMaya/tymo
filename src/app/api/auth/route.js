@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { readFile } from "fs/promises";
-import path from "path";
-import bycrpt from "bcryptjs";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken"; //bcrypt para comparar la contraseña
 import cookie from "cookie"; // Importamos jsonwebtoken para crear el JWT
+import pool from '@/app/api/db/mysql';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -11,19 +10,23 @@ export const POST = async (req) => {
   try {
     const body = await req.json();
     const { dni, password } = body;
-
-    const filePath = path.join(process.cwd(), "src/app/api/db/user.json");
-    const fileData = await readFile(filePath, "utf8");
-    const users = JSON.parse(fileData);
+    // console.log('dni: ',dni);
+    // console.log('password: ', password);
+    
+        
     // buscamos al user
-    const user = users.find((u) => u.DNI === dni);
+    const [rows] = await pool.query('SELECT * FROM users WHERE dni = ?', [dni]);
+    const user = rows[0]; // obtenemos al primer user si existe
+    // console.log('user0: ', user);
+
+  
 
     if (user) {
       // COMPARAMOS PASSWORD PROPORCIONADA CON LA ALMACENADA, USANDO BCRYPT
-      const passwordMatch = await bycrpt.compare(password, user.password);
+      const passwordMatch = await bcrypt.compare(password, user.password);
       if (passwordMatch) {
         // si es correecta la pass generamos jwt
-        const token = jwt.sign({ DNI: user.DNI, name: user.name }, JWT_SECRET, {
+        const token = jwt.sign({ dni: user.dni, name: user.name, role: user.role }, JWT_SECRET, {
           expiresIn: "1h",
         });
 
@@ -37,22 +40,23 @@ export const POST = async (req) => {
           success: true,
           user: {
             name: user.name,
-            DNI: user.DNI,
+            dni: user.dni,
+            role: user.role
           },
-          token,
+        });
  
-        });
-
-        //enviar token al front o coockies cookie al front
-        const serializedCookie = cookie.serialize("token", token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          maxAge: 60 * 60 * 24 * 7, // 7 dias de validez
-          path: "/",
-        });
-
+        
         // añado la coockie a los headers de la respuesta
-        res.headers.set("Set-Cookie", serializedCookie);
+        res.headers.set(
+          "Set-Cookie", 
+          cookie.serialize('token', token, {
+            httpOnly:true,
+            secure: process.env.NODE_ENV=== 'production',
+            sameSite: 'strict',
+            maxAge: 60*60*24*7, // 7 DIAS
+            path: '/',
+          })
+        );
         return res;
       } else {
         return NextResponse.json(

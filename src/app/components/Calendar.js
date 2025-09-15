@@ -18,6 +18,50 @@ const Calendar = ({ userDni }) => {
   const startOfMounth = currentDate.startOf("month");
   const startDay = startOfMounth.day(); //domingo
   const daysInMonth = currentDate.daysInMonth();
+  const [weekendHours, setWeekendHours] = useState({});
+
+  const getDayHours = (dateStr) => {
+    const date = dayjs(dateStr);
+    const weeklyDay = date.day();
+    const isWorkDay = weeklyDay >= 1 && weeklyDay <= 5;
+    const isHoliday = holidays.some((h) => h.fecha === dateStr);
+    const isWorked = workedDates.includes(dateStr);
+    const isWeekend = weeklyDay === 0 || weeklyDay === 6;
+
+    if (isWeekend && isWorked) {
+      const ingresoStr = weekendHours[dateStr] || "8:00";
+      const [ingresoHour, ingresoMinute] = ingresoStr.split(":").map(Number);
+
+      if (weeklyDay === 6) {
+        // Sábado
+        const jornadaTotal = 6; // siempre 6 horas
+        const horaInicioJornada = ingresoHour + ingresoMinute / 60;
+        const horaFinJornada = horaInicioJornada + jornadaTotal;
+
+        // Horas antes de las 13
+        const horasNormales = Math.max(
+          0,
+          Math.min(13, horaFinJornada) - horaInicioJornada
+        );
+        // Horas después de las 13 → doble
+        const horasDobles =
+          Math.max(0, horaFinJornada - Math.max(13, horaInicioJornada)) * 2;
+
+        return horasNormales + horasDobles;
+      }
+
+      if (weeklyDay === 0) return 12; // domingo siempre doble
+    }
+
+    // Feriados
+    if (isHoliday && isWorked) return 12;
+    if (isHoliday && !isWorked && isWorkDay) return 6;
+
+    // Días normales de semana
+    if (!isHoliday && isWorked) return 6;
+
+    return 0;
+  };
 
   useEffect(() => {
     const fetchHolidays = async () => {
@@ -90,28 +134,22 @@ const Calendar = ({ userDni }) => {
 
   // Construir días calendario
   const days = [];
-
-  //  dias contados y marcadas horas
-  const totalHours = workedDates.reduce((acc, dateStr) => {
-    const date = dayjs(dateStr);
-
-    // solo contamos en el mes actual
-    if (
-      date.month() === currentDate.month() &&
-      date.year() === currentDate.year()
-    ) {
-      acc += 6; //sumamos 6 horas por dia habil trabajado
-    }
-
-    return acc;
-  }, 0);
-
   for (let i = 0; i < startDay; i++) {
     days.push(null); // dias vacios al principio
   }
 
   for (let d = 1; d <= daysInMonth; d++) {
     days.push(d);
+  }
+
+  //Calcular horas con reglas de feriados
+  let totalHours = 0;
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = currentDate.clone().date(d);
+    const dateStr = date.format("YYYY-MM-DD");
+
+    totalHours += getDayHours(dateStr); // ahora getDayHours contempla fines de semana
   }
 
   //   CAMBIAR DE MESES PARA ATRAS Y ADELANTE
@@ -156,11 +194,11 @@ const Calendar = ({ userDni }) => {
           const isWorked = workedDates.includes(dateStr);
           const weeklyDay = date.day();
           const isWorkDay = weeklyDay >= 1 && weeklyDay <= 5;
-
+          const isWeekend = weeklyDay === 0 || weeklyDay === 6;
           return (
             <div
               key={index}
-              className={`relative rounded-md h-24 flex flex-col items-start text-left text-xs select-none bg-bluenavydk`}
+              className={`relative rounded-md h-28 flex flex-col items-start text-left text-xs select-none bg-bluenavydk`}
               title={
                 isHoliday
                   ? "Feriado"
@@ -181,32 +219,57 @@ const Calendar = ({ userDni }) => {
                 {day}
               </div>
 
-              {isWorkDay && (
-                <div className="mt-1">
-                  <div>🕒 9:30 - 15:30</div>
-                  <div>⏱️ 6 hs</div>
-                </div>
-              )}
+              {/* Mostrar horas */}
+              <div className="mt-1">
+                {isWorked && isWeekend && (
+                  <div className="ml-2">
+                    <h4 className="mb-1 ml-2">Ingreso</h4>
+                    <select
+                      value={weekendHours[dateStr] || "8:00"}
+                      onChange={(e) =>
+                        setWeekendHours({
+                          ...weekendHours,
+                          [dateStr]: e.target.value,
+                        })
+                      }
+                      className="text-xs rounded px-1 py-0.5 bg-darkbg text-white"
+                    >
+                      {Array.from({ length: (16 - 8) * 2 + 1 }, (_, i) => {
+                        const hour = Math.floor((8 * 2 + i) / 2);
+                        const minute = i % 2 === 0 ? "00" : "30";
+                        return `${hour}:${minute}`;
+                      }).map((time) => (
+                        <option key={time} value={time}>
+                          {time}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {/* Mostrar horas siempre que corresponda */}
+                {getDayHours(dateStr) > 0 && (
+                  <div className="mt-1 ml-3">
+                  ⏱️{getDayHours(dateStr)} hs
+                  </div>
+                )}
+              </div>
 
               {/* Botón pequeño en esquina superior derecha */}
-              
-                <div
-                  onClick={(e) => {
-                    e.stopPropagation(); // evitar que el click propague al div padre
-                    toggleWorkedDate(dateStr);
-                  }}
-                  className={`absolute top-1 right-1 w-6 h-6 flex items-center justify-center rounded-sm  cursor-pointer
+
+              <div
+                onClick={(e) => {
+                  e.stopPropagation(); // evitar que el click propague al div padre
+                  toggleWorkedDate(dateStr);
+                }}
+                className={`absolute top-1 right-1 w-6 h-6 flex items-center justify-center rounded-sm  cursor-pointer
             ${isWorked ? "bg-aeroblue" : "bg-darkbg hover:bg-aeroblue"}
           `}
-                  title={
-                    isWorked
-                      ? "Desmarcar día trabajado"
-                      : "Marcar día trabajado"
-                  }
-                >
-                  {isWorked && <CheckIcon className="w-6 h-6 text-white" />}
-                </div>
-              
+                title={
+                  isWorked ? "Desmarcar día trabajado" : "Marcar día trabajado"
+                }
+              >
+                {isWorked && <CheckIcon className="w-6 h-6 text-white" />}
+              </div>
             </div>
           );
         })}
