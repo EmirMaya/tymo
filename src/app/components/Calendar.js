@@ -148,8 +148,6 @@ const Calendar = ({ userDni }) => {
   for (let d = 1; d <= daysInMonth; d++) {
     const date = currentDate.clone().date(d);
     const dateStr = date.format("YYYY-MM-DD");
-    const isWorked = workedDates.includes(dateStr);
-    const weeklyDay = date.day();
 
     totalHours += getDayHours(dateStr); // ahora getDayHours contempla fines de semana
   }
