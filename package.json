@@ -2,6 +2,7 @@
   "name": "tymo",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
@@ -10,10 +11,17 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
+    "axios": "^1.11.0",
+    "bcryptjs": "^3.0.2",
+    "cookie": "^1.0.2",
     "dayjs": "^1.11.13",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.14.3",
     "next": "15.4.4",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "react-icons": "^5.5.0",
+    "react-spinners": "^0.17.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

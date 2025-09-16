@@ -1,10 +1,28 @@
+"use client";
+import { ClipLoader } from "react-spinners";
 import Calendar from "./components/Calendar";
-
+import Header from "./components/Header";
+import { useAuth } from "@/hooks/useAuth";
 export default function Home() {
+  const {user, loading} = useAuth();
+
+
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-darkbg">
+        <ClipLoader size={70} color="#36d7b7" />
+      </div>
+    );
+  }
+
+  
+
   return (
-    <main className="min-h-screen bg-gray-200 p-4">
-      <h1 className="text-3xl font-bold mb-6 w-full bg-teal-300">TYMO</h1>
-      <Calendar />
-    </main>
+    <div className="bg-darkbg flex text-frenchgray">
+      <Header />
+      {user ? <Calendar userDni={user.dni} /> : <div>No se encontró el DNI.</div>}
+    </div>
   );
+  
 }

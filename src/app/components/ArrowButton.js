@@ -7,9 +7,9 @@ const ArrowButton = ({onClick, Icon, direction = 'left', label}) => {
         <button
             onClick={onClick}
             aria-label={label || direction}
-            className='p-2 hover:bg-teal-100 rounded-full transition'
+            className='p-2 hover:bg-frenchgray rounded-md bg-midnightblue transition'
         >
-            <Icon className='h-6 w-6 text-gray-600' />
+            <Icon className='h-6 w-6 text-gray-300 hover:text-bluenavydk' />
         </button>
     )
 }
