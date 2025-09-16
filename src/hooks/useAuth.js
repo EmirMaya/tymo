@@ -11,6 +11,8 @@ export const AuthProvider = ({ children }) => {
   const router = useRouter();
 
   useEffect(() => {
+    let cancelled = false;
+
     const checkAuth = async () => {
       try {
         const { data } = await axios.get("/api/auth/me", {
@@ -18,7 +20,10 @@ export const AuthProvider = ({ children }) => {
         });
 
         if (data.authenticated) {
-          setUser(data.user);
+          if (!cancelled) {
+            setUser(data.user);
+            setLoading(false);
+          }
         } else {
           router.replace("/login");
         }
@@ -27,11 +32,10 @@ export const AuthProvider = ({ children }) => {
           console.error("Error checking auth:", err);
         }
         router.replace("/login");
-      } finally {
-        setLoading(false);
       }
     };
     checkAuth();
+    return() => {cancelled = true}
   }, [router]);
 
   const logout = async () => {
