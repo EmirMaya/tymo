@@ -14,7 +14,12 @@
 }
 
 @theme {
-    --color-darkbg: #092934;
+    --color-darkbg: #0D1117;
+    --color-rblack: #161B22;
+    --color-inputblack: #101419;
+    --color-grdblue: #005DFF;
+    --color-grlblue: #00A6FF;
+    --color-graymetal: #28313E;
     --color-bluenavydk: #0F4557;
     --color-frenchgray: #D0CCD0;
     --color-cornflower: #758BFD;
