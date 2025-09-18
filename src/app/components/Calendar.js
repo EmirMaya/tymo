@@ -1,7 +1,7 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import dayjs from "dayjs";
-import "dayjs/locale/es"; // Importa el idioma español
+import "dayjs/locale/es";
 import axios from "axios";
 import {
   ChevronLeftIcon,
@@ -11,168 +11,199 @@ import {
 import ArrowButton from "./ArrowButton";
 
 dayjs.locale("es");
+
 const Calendar = ({ userDni }) => {
   const [currentDate, setCurrentDate] = useState(dayjs());
-  const [workedDates, setWorkedDates] = useState([]);
-  const [holidays, setHolidays] = useState([]);
-  const startOfMounth = currentDate.startOf("month");
-  const startDay = startOfMounth.day(); //domingo
-  const daysInMonth = currentDate.daysInMonth();
-  const [weekendHours, setWeekendHours] = useState({});
+  const [workedDates, setWorkedDates] = useState([]);        // ["YYYY-MM-DD", ...]
+  const [weekendHours, setWeekendHours] = useState({});      // { "YYYY-MM-DD": "HH:MM" }
+  const [holidays, setHolidays] = useState([]);              // [{ fecha: "YYYY-MM-DD", ... }, ...]
 
+  // Datos de mes actual
+  const startOfMonth = currentDate.startOf("month");
+  const startDay = startOfMonth.day(); // domingo=0
+  const daysInMonth = currentDate.daysInMonth();
+
+  // Opciones 08:00 → 16:00 cada 30'
+  const timeOptions = useMemo(() => {
+    const out = [];
+    for (let h = 8; h <= 16; h++) {
+      out.push(`${h}:00`);
+      if (h < 16) out.push(`${h}:30`);
+    }
+    return out;
+  }, []);
+
+  /** ---------- CARGA DE DATOS ---------- */
+  // Feriados por año (si cambia el año del mes actual)
+  useEffect(() => {
+    const fetchHolidays = async () => {
+      try {
+        const year = currentDate.year();
+        const { data } = await axios.get(
+          `https://api.argentinadatos.com/v1/feriados/${year}`
+        );
+        setHolidays(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Error al cargar feriados: ", error);
+        setHolidays([]);
+      }
+    };
+    fetchHolidays();
+  }, [currentDate]);
+
+  // Fechas trabajadas + ingresos de finde
+  useEffect(() => {
+    if (!userDni) return;
+    const fetchWorked = async () => {
+      try {
+        const { data } = await axios.get(`/api/calendar/${userDni}`);
+        if (data?.success) {
+          setWorkedDates(data.fechas || []);
+          setWeekendHours(data.weekendHours || {});
+        } else {
+          setWorkedDates([]);
+          setWeekendHours({});
+        }
+      } catch (err) {
+        console.error("Error al cargar fechas/ingresos: ", err);
+        setWorkedDates([]);
+        setWeekendHours({});
+      }
+    };
+    fetchWorked();
+  }, [userDni]);
+
+  /** ---------- LÓGICA DE HORAS ---------- */
   const getDayHours = (dateStr) => {
     const date = dayjs(dateStr);
-    const weeklyDay = date.day();
-    const isWorkDay = weeklyDay >= 1 && weeklyDay <= 5;
+    const weekday = date.day(); // 0=Dom
+    const isWorkDay = weekday >= 1 && weekday <= 5;
     const isHoliday = holidays.some((h) => h.fecha === dateStr);
     const isWorked = workedDates.includes(dateStr);
-    const isWeekend = weeklyDay === 0 || weeklyDay === 6;
+    const isWeekend = weekday === 0 || weekday === 6;
 
     if (isWeekend && isWorked) {
       const ingresoStr = weekendHours[dateStr] || "8:00";
       const [ingresoHour, ingresoMinute] = ingresoStr.split(":").map(Number);
 
-      if (weeklyDay === 6) {
-        // Sábado
-        const jornadaTotal = 6; // siempre 6 horas
-        const horaInicioJornada = ingresoHour + ingresoMinute / 60;
-        const horaFinJornada = horaInicioJornada + jornadaTotal;
-
-        // Horas antes de las 13
-        const horasNormales = Math.max(
-          0,
-          Math.min(13, horaFinJornada) - horaInicioJornada
-        );
-        // Horas después de las 13 → doble
-        const horasDobles =
-          Math.max(0, horaFinJornada - Math.max(13, horaInicioJornada)) * 2;
-
-        return horasNormales + horasDobles;
+      if (weekday === 6) {
+        // Sábado: 6 h siempre (normales hasta 13:00, dobles después)
+        const jornadaTotal = 6;
+        const start = ingresoHour + ingresoMinute / 60;
+        const end = start + jornadaTotal;
+        const normales = Math.max(0, Math.min(13, end) - start);
+        const dobles = Math.max(0, end - Math.max(13, start)) * 2;
+        return normales + dobles;
       }
-
-      if (weeklyDay === 0) return 12; // domingo siempre doble
+      if (weekday === 0) return 12; // Domingo: siempre doble (6h * 2)
     }
 
     // Feriados
-    if (isHoliday && isWorked) return 12;
-    if (isHoliday && !isWorked && isWorkDay) return 6;
+    if (isHoliday && isWorked) return 12;         // trabajado en feriado = doble 6h*2
+    if (isHoliday && !isWorked && isWorkDay) return 6; // no trabajado en feriado y día laboral = 6h base
 
-    // Días normales de semana
+    // Días normales de semana trabajados
     if (!isHoliday && isWorked) return 6;
 
     return 0;
   };
 
-  useEffect(() => {
-    const fetchHolidays = async () => {
-      try {
-        const year = currentDate.year();
-        const res = await axios.get(
-          `https://api.argentinadatos.com/v1/feriados/${year}`
-        );
-
-        setHolidays(res.data);
-      } catch (error) {
-        console.error("Error al cargar feriados: ", error);
-      }
-    };
-
-    fetchHolidays();
-  }, [currentDate]);
-  //cargar fechas trabajadas desde el back, una vez que haya
-  useEffect(() => {
-    if (!userDni) return;
-    const fetchWorkedDates = async () => {
-      try {
-        const res = await axios.get(`/api/calendar/${userDni}`);
-        if (res.data.success) {
-          setWorkedDates(res.data.fechas || []);
-        } else {
-          console.warn(
-            "No se encontraron fechas para este user: ",
-            res.data.message
-          );
-          setWorkedDates([]);
-        }
-      } catch (err) {
-        console.error("Error al cargar fechas trabajadas: ", err);
-        setWorkedDates([]);
-      }
-    };
-    fetchWorkedDates();
-  }, [userDni]);
-
-  //Alternar dia trabajado
+  /** ---------- ACCIONES ---------- */
+  // Alternar día trabajado
   const toggleWorkedDate = async (dateStr) => {
-    if (!userDni) return; // no hacemos nada si no hay DNI
+    if (!userDni) return;
 
-    // Verificamos si la fecha ya está marcada
-    const isWorked = workedDates.includes(dateStr);
-    const updatedDates = isWorked
+    const wasWorked = workedDates.includes(dateStr);
+    const nextDates = wasWorked
       ? workedDates.filter((d) => d !== dateStr)
       : [...workedDates, dateStr];
 
-    // Actualizamos la UI inmediatamente (optimistic update)
-    setWorkedDates(updatedDates);
+    // UI optimista
+    setWorkedDates(nextDates);
+
+    // Si desmarcás un finde, limpiamos su hora en DB (y local state)
+    const weekday = dayjs(dateStr).day();
+    const isWeekend = weekday === 0 || weekday === 6;
 
     try {
-      const res = await axios.put(`/api/calendar/${userDni}`, {
-        fechas: updatedDates,
+      const { data } = await axios.put(`/api/calendar/${userDni}`, {
+        fechas: nextDates,
       });
 
-      if (!res.data.success) {
-        // Si el backend no actualizó, revertimos cambios en UI
-        console.warn("No se pudo actualizar en el servidor:", res.data.message);
-        setWorkedDates(workedDates);
+      if (!data?.success) {
+        setWorkedDates(workedDates); // revertir
+        return;
+      }
+
+      if (wasWorked && isWeekend && weekendHours[dateStr]) {
+        // DELETE en DB
+        try {
+          await axios.delete("/api/calendar/weekend", {
+            data: { userDni, date: dateStr },
+          });
+        } catch (e) {
+          console.error("Error borrando ingreso de finde:", e);
+        }
+        // Limpiar en estado
+        setWeekendHours((prev) => {
+          const { [dateStr]: _, ...rest } = prev;
+          return rest;
+        });
       }
     } catch (err) {
-      console.error("Error al guardar fechas trabajadas:", err);
-      // Revertimos cambios en la UI si hubo error
-      setWorkedDates(workedDates);
+      console.error("Error guardando calendario:", err);
+      setWorkedDates(workedDates); // revertir
     }
   };
 
-  // Construir días calendario
-  const days = [];
-  for (let i = 0; i < startDay; i++) {
-    days.push(null); // dias vacios al principio
-  }
+  // Guardar/actualizar hora de ingreso del finde
+  const updateWeekendHour = async (dateStr, value) => {
+    // UI optimista
+    setWeekendHours((prev) => ({ ...prev, [dateStr]: value }));
 
-  for (let d = 1; d <= daysInMonth; d++) {
-    days.push(d);
-  }
+    try {
+      await axios.put("/api/calendar/weekend", {
+        userDni,
+        date: dateStr,
+        ingreso: value, // 'HH:MM'
+      });
+    } catch (e) {
+      console.error("No se pudo guardar el ingreso:", e);
+      // si quisieras, podrías revertir aquí con el valor anterior
+    }
+  };
 
-  //Calcular horas con reglas de feriados
-  let totalHours = 0;
+  /** ---------- CONSTRUCCIÓN DEL CALENDARIO ---------- */
+  const days = useMemo(() => {
+    const arr = [];
+    for (let i = 0; i < startDay; i++) arr.push(null);
+    for (let d = 1; d <= daysInMonth; d++) arr.push(d);
+    return arr;
+  }, [startDay, daysInMonth]);
 
-  for (let d = 1; d <= daysInMonth; d++) {
-    const date = currentDate.clone().date(d);
-    const dateStr = date.format("YYYY-MM-DD");
+  // Total mensual (calculado una sola vez por render)
+  const totalHours = useMemo(() => {
+    let total = 0;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = currentDate.clone().date(d).format("YYYY-MM-DD");
+      total += getDayHours(dateStr);
+    }
+    return total;
+  }, [currentDate, daysInMonth, workedDates, weekendHours, holidays]);
 
-    totalHours += getDayHours(dateStr); // ahora getDayHours contempla fines de semana
-  }
-
-  //   CAMBIAR DE MESES PARA ATRAS Y ADELANTE
   const handlePrevMonth = () =>
-    setCurrentDate(currentDate.subtract(1, "month"));
-  const handleNextMonth = () => setCurrentDate(currentDate.add(1, "month"));
+    setCurrentDate((prev) => prev.subtract(1, "month"));
+  const handleNextMonth = () =>
+    setCurrentDate((prev) => prev.add(1, "month"));
 
   return (
-    <div className="mt-7 p-6 w-screen ">
+    <div className="mt-7 p-6 w-screen">
       <div className="flex justify-between items-center mb-4 w-1/3 border border-bluenavydk bg-bluenavydk rounded-md">
-        <ArrowButton
-          onClick={handlePrevMonth}
-          Icon={ChevronLeftIcon}
-          direction="left"
-        />
+        <ArrowButton onClick={handlePrevMonth} Icon={ChevronLeftIcon} direction="left" />
         <h2 className="text-2xl font-bold text-linencream w-full text-center">
           {currentDate.format("MMMM YYYY")}
         </h2>
-        <ArrowButton
-          onClick={handleNextMonth}
-          Icon={ChevronRightIcon}
-          direction="right"
-        />
+        <ArrowButton onClick={handleNextMonth} Icon={ChevronRightIcon} direction="right" />
       </div>
 
       <div className="grid grid-cols-7 gap-2 text-center text-linencream">
@@ -183,22 +214,22 @@ const Calendar = ({ userDni }) => {
         ))}
 
         {days.map((day, index) => {
-          if (day === null) {
-            return <div key={index} className="h-24"></div>;
-          }
+          if (day === null) return <div key={index} className="h-24" />;
 
           const date = currentDate.clone().date(day);
           const dateStr = date.format("YYYY-MM-DD");
-
           const isHoliday = holidays.some((h) => h.fecha === dateStr);
           const isWorked = workedDates.includes(dateStr);
-          const weeklyDay = date.day();
-          const isWorkDay = weeklyDay >= 1 && weeklyDay <= 5;
-          const isWeekend = weeklyDay === 0 || weeklyDay === 6;
+          const weekday = date.day();
+          const isWeekend = weekday === 0 || weekday === 6;
+
+          // Evitamos llamar getDayHours dos veces
+          const computedHours = getDayHours(dateStr);
+
           return (
             <div
               key={index}
-              className={`relative rounded-md h-28 flex flex-col items-start text-left text-xs select-none bg-bluenavydk`}
+              className="relative rounded-md h-28 flex flex-col items-start text-left text-xs select-none bg-bluenavydk"
               title={
                 isHoliday
                   ? "Feriado"
@@ -209,64 +240,44 @@ const Calendar = ({ userDni }) => {
             >
               <div
                 className={`text-sm font-bold w-[26px] rounded-tl-md px-1 text-center 
-                 ${
-                   isHoliday
-                     ? "bg-imperialred text-white"
-                     : "bg-crayolablue text-white"
-                 }
-                `}
+                  ${isHoliday ? "bg-imperialred text-white" : "bg-crayolablue text-white"}`}
               >
                 {day}
               </div>
 
-              {/* Mostrar horas */}
+              {/* Contenido del día */}
               <div className="mt-1">
                 {isWorked && isWeekend && (
                   <div className="ml-2">
                     <h4 className="mb-1 ml-2">Ingreso</h4>
                     <select
                       value={weekendHours[dateStr] || "8:00"}
-                      onChange={(e) =>
-                        setWeekendHours({
-                          ...weekendHours,
-                          [dateStr]: e.target.value,
-                        })
-                      }
+                      onChange={(e) => updateWeekendHour(dateStr, e.target.value)}
                       className="text-xs rounded px-1 py-0.5 bg-darkbg text-white"
                     >
-                      {Array.from({ length: (16 - 8) * 2 + 1 }, (_, i) => {
-                        const hour = Math.floor((8 * 2 + i) / 2);
-                        const minute = i % 2 === 0 ? "00" : "30";
-                        return `${hour}:${minute}`;
-                      }).map((time) => (
-                        <option key={time} value={time}>
-                          {time}
+                      {timeOptions.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
                         </option>
                       ))}
                     </select>
                   </div>
                 )}
-                {/* Mostrar horas siempre que corresponda */}
-                {getDayHours(dateStr) > 0 && (
-                  <div className="mt-1 ml-3">
-                  ⏱️{getDayHours(dateStr)} hs
-                  </div>
+
+                {computedHours > 0 && (
+                  <div className="mt-1 ml-3">⏱️{computedHours} hs</div>
                 )}
               </div>
 
-              {/* Botón pequeño en esquina superior derecha */}
-
+              {/* Toggle trabajado */}
               <div
                 onClick={(e) => {
-                  e.stopPropagation(); // evitar que el click propague al div padre
+                  e.stopPropagation();
                   toggleWorkedDate(dateStr);
                 }}
-                className={`absolute top-1 right-1 w-6 h-6 flex items-center justify-center rounded-sm  cursor-pointer
-            ${isWorked ? "bg-aeroblue" : "bg-darkbg hover:bg-aeroblue"}
-          `}
-                title={
-                  isWorked ? "Desmarcar día trabajado" : "Marcar día trabajado"
-                }
+                className={`absolute top-1 right-1 w-6 h-6 flex items-center justify-center rounded-sm cursor-pointer
+                  ${isWorked ? "bg-aeroblue" : "bg-darkbg hover:bg-aeroblue"}`}
+                title={isWorked ? "Desmarcar día trabajado" : "Marcar día trabajado"}
               >
                 {isWorked && <CheckIcon className="w-6 h-6 text-white" />}
               </div>
@@ -274,6 +285,7 @@ const Calendar = ({ userDni }) => {
           );
         })}
       </div>
+
       {totalHours > 0 && (
         <div className="mt-4 bg-bluenavydk text-white p-2 rounded">
           Horas mensuales trabajadas: {totalHours} hs
