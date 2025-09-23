@@ -26,12 +26,14 @@ export const AuthProvider = ({ children }) => {
           }
         } else {
           router.replace("/login");
+          if (!cancelled) setLoading(false); // 
         }
       } catch (err) {
         if (err.response?.status !== 401) {
           console.error("Error checking auth:", err);
         }
         router.replace("/login");
+        if (!cancelled) setLoading(false); 
       }
     };
     checkAuth();
