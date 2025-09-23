@@ -14,9 +14,9 @@ dayjs.locale("es");
 
 const Calendar = ({ userDni }) => {
   const [currentDate, setCurrentDate] = useState(dayjs());
-  const [workedDates, setWorkedDates] = useState([]);        // ["YYYY-MM-DD", ...]
-  const [weekendHours, setWeekendHours] = useState({});      // { "YYYY-MM-DD": "HH:MM" }
-  const [holidays, setHolidays] = useState([]);              // [{ fecha: "YYYY-MM-DD", ... }, ...]
+  const [workedDates, setWorkedDates] = useState([]); // ["YYYY-MM-DD", ...]
+  const [weekendHours, setWeekendHours] = useState({}); // { "YYYY-MM-DD": "HH:MM" }
+  const [holidays, setHolidays] = useState([]); // [{ fecha: "YYYY-MM-DD", ... }, ...]
 
   // Datos de mes actual
   const startOfMonth = currentDate.startOf("month");
@@ -99,7 +99,7 @@ const Calendar = ({ userDni }) => {
     }
 
     // Feriados
-    if (isHoliday && isWorked) return 12;         // trabajado en feriado = doble 6h*2
+    if (isHoliday && isWorked) return 12; // trabajado en feriado = doble 6h*2
     if (isHoliday && !isWorked && isWorkDay) return 6; // no trabajado en feriado y día laboral = 6h base
 
     // Días normales de semana trabajados
@@ -193,22 +193,29 @@ const Calendar = ({ userDni }) => {
 
   const handlePrevMonth = () =>
     setCurrentDate((prev) => prev.subtract(1, "month"));
-  const handleNextMonth = () =>
-    setCurrentDate((prev) => prev.add(1, "month"));
+  const handleNextMonth = () => setCurrentDate((prev) => prev.add(1, "month"));
 
   return (
-    <div className="mt-7 p-6 w-screen">
-      <div className="flex justify-between items-center mb-4 w-1/3 border border-bluenavydk bg-bluenavydk rounded-md">
-        <ArrowButton onClick={handlePrevMonth} Icon={ChevronLeftIcon} direction="left" />
-        <h2 className="text-2xl font-bold text-linencream w-full text-center">
+    <div className="mt-7 p-6 w-full max-w-7xl mx-auto">
+      <div className="flex justify-between items-center mb-4 w-1/3  rounded-md">
+        <ArrowButton
+          onClick={handlePrevMonth}
+          Icon={ChevronLeftIcon}
+          direction="left"
+        />
+        <h2 className="px-1 py-1.5 rounded-sm text-2xl font-bold text-linencream bg-rblack w-[55%] text-center">
           {currentDate.format("MMMM YYYY")}
         </h2>
-        <ArrowButton onClick={handleNextMonth} Icon={ChevronRightIcon} direction="right" />
+        <ArrowButton
+          onClick={handleNextMonth}
+          Icon={ChevronRightIcon}
+          direction="right"
+        />
       </div>
 
       <div className="grid grid-cols-7 gap-2 text-center text-linencream">
         {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sab"].map((day) => (
-          <div key={day} className="font-bold bg-midnightblue rounded-md">
+          <div key={day} className="font-bold bg-rblack rounded-sm">
             {day}
           </div>
         ))}
@@ -229,7 +236,7 @@ const Calendar = ({ userDni }) => {
           return (
             <div
               key={index}
-              className="relative rounded-md h-28 flex flex-col items-start text-left text-xs select-none bg-bluenavydk"
+              className="relative rounded-sm h-28 flex flex-col items-start text-left text-xs select-none bg-rblacklight"
               title={
                 isHoliday
                   ? "Feriado"
@@ -239,21 +246,27 @@ const Calendar = ({ userDni }) => {
               }
             >
               <div
-                className={`text-sm font-bold w-[26px] rounded-tl-md px-1 text-center 
-                  ${isHoliday ? "bg-imperialred text-white" : "bg-crayolablue text-white"}`}
+                className={`text-sm font-bold w-[26px] rounded-tl-sm px-1 text-center 
+                  ${
+                    isHoliday
+                      ? "bg-imperialred text-linencream"
+                      : "bg-linear-to-b from-grlblue to-grdblue text-linencream"
+                  }`}
               >
                 {day}
               </div>
 
               {/* Contenido del día */}
-              <div className="mt-1">
+              <div className="mt-1.5">
                 {isWorked && isWeekend && (
-                  <div className="ml-2">
-                    <h4 className="mb-1 ml-2">Ingreso</h4>
+                  <div className="ml-2 bg-rblack rounded-sm">
+                    <h4 className="mb-1 ml-2 font-semibold">Ingreso</h4>
                     <select
                       value={weekendHours[dateStr] || "8:00"}
-                      onChange={(e) => updateWeekendHour(dateStr, e.target.value)}
-                      className="text-xs rounded px-1 py-0.5 bg-darkbg text-white"
+                      onChange={(e) =>
+                        updateWeekendHour(dateStr, e.target.value)
+                      }
+                      className="text-xs px-1 py-0.5 bg-darkbg text-linencream"
                     >
                       {timeOptions.map((t) => (
                         <option key={t} value={t}>
@@ -265,7 +278,7 @@ const Calendar = ({ userDni }) => {
                 )}
 
                 {computedHours > 0 && (
-                  <div className="mt-1 ml-3">⏱️{computedHours} hs</div>
+                  <div className="mt-1 ml-2 absolute bottom-1 font-semibold">⏱️{computedHours} hs</div>
                 )}
               </div>
 
@@ -277,9 +290,11 @@ const Calendar = ({ userDni }) => {
                 }}
                 className={`absolute top-1 right-1 w-6 h-6 flex items-center justify-center rounded-sm cursor-pointer
                   ${isWorked ? "bg-aeroblue" : "bg-darkbg hover:bg-aeroblue"}`}
-                title={isWorked ? "Desmarcar día trabajado" : "Marcar día trabajado"}
+                title={
+                  isWorked ? "Desmarcar día trabajado" : "Marcar día trabajado"
+                }
               >
-                {isWorked && <CheckIcon className="w-6 h-6 text-white" />}
+                {isWorked && <CheckIcon className="w-6 h-6 text-linencream font-semibold" />}
               </div>
             </div>
           );
@@ -287,7 +302,7 @@ const Calendar = ({ userDni }) => {
       </div>
 
       {totalHours > 0 && (
-        <div className="mt-4 bg-bluenavydk text-white p-2 rounded">
+        <div className="mt-4 w-1/4 bg-linear-to-b from-grlblue to-grdblue text-linencream font-bold p-2 rounded-sm">
           Horas mensuales trabajadas: {totalHours} hs
         </div>
       )}

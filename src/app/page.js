@@ -4,11 +4,9 @@ import Calendar from "./components/Calendar";
 import Header from "./components/Header";
 import { useAuth } from "@/hooks/useAuth";
 export default function Home() {
-  const {user, loading} = useAuth();
+  const { user, loading } = useAuth();
 
-
-
-  if (loading) {
+  if (loading || (!loading && !user)) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-darkbg">
         <ClipLoader size={70} color="#005DFF" />
@@ -16,13 +14,16 @@ export default function Home() {
     );
   }
 
-  
-
   return (
     <div className="bg-darkbg flex text-frenchgray">
       <Header />
-      {user ? <Calendar userDni={user.dni} /> : <div>No se encontró el DNI.</div>}
+      <main className="ml-[220px] w-[calc(100vw-220px)] overflow-x-hidden">
+        {user ? (
+          <Calendar userDni={user.dni} />
+        ) : (
+          <div>No se encontró el DNI.</div>
+        )}
+      </main>
     </div>
   );
-  
 }
