@@ -8,7 +8,7 @@ export default function Home() {
 
 
 
-  if (loading) {
+  if (loading || (!loading && !user)) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-darkbg">
         <ClipLoader size={70} color="#005DFF" />
