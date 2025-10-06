@@ -303,7 +303,7 @@ const Calendar = ({ userDni }) => {
 
       {totalHours > 0 && (
         <div className="mt-4 w-1/4 bg-linear-to-b from-grlblue to-grdblue text-linencream font-bold p-2 rounded-sm">
-          Horas mensuales trabajadas: {totalHours} hs
+          Horas totales: {totalHours} hs
         </div>
       )}
     </div>
