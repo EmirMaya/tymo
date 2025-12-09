@@ -1,36 +1,32 @@
 import { NextResponse } from "next/server";
-import pool from "@/app/api/db/mysql"; // ajusta si tu ruta es diferente
+import { connectDB } from "@/lib/mongodb";
+import WorkedDate from "@/models/WorkedDate";
+import WeekendHour from "@/models/WeekendHour";
 
 // GET /api/calendar/:dni
 export const GET = async (req, { params }) => {
   try {
+    await connectDB();
+
     const dni = params.dni;
 
-    // 1) Fechas trabajadas
-    const [rowsDates] = await pool.query(
-      "SELECT worked_date FROM worked_dates WHERE user_dni = ? ORDER BY worked_date",
-      [dni]
+    // fechas trabajadas
+    const rowsDates = await WorkedDate.find({ userDni: dni })
+      .sort({ WorkedDate: 1 })
+      .lean();
+
+    const fechas = rowsDates.map(
+      (row) => row.workedDate.toISOString().split("T")[0]
     );
 
-    const fechas = rowsDates.map((row) =>
-      row.worked_date.toISOString().split("T")[0]
-    );
-
-    // 2) Ingresos de fin de semana
-    const [rowsHours] = await pool.query(
-      "SELECT worked_date, ingreso_time FROM weekend_hours WHERE user_dni = ?",
-      [dni]
-    );
-
+    //fin de semanas
+    const rowsHours = await WeekendHour.find({ userDni: dni }).lean();
     // Mapa { 'YYYY-MM-DD': 'HH:MM' }
     const weekendHours = {};
     for (const r of rowsHours) {
-      const dateStr = r.worked_date.toISOString().split("T")[0];
-      // ingreso_time llega como 'HH:MM:SS' -> recortamos a 'HH:MM'
-      weekendHours[dateStr] = (typeof r.ingreso_time === "string"
-        ? r.ingreso_time
-        : String(r.ingreso_time)
-      ).slice(0, 5);
+      const dateStr = r.workedDate.toISOString().split("T")[0];
+      const timeStr = (r.ingresoTime || "").toString().slice(0, 5); // "HH:MM"
+      weekendHours[dateStr] = timeStr;
     }
 
     return NextResponse.json({ success: true, fechas, weekendHours });
@@ -41,47 +37,58 @@ export const GET = async (req, { params }) => {
       { status: 500 }
     );
   }
-};
 
-// PUT /api/calendar/:dni
-export const PUT = async (req, { params }) => {
-  try {
-    const dni = params.dni;
-    const { fechas } = await req.json(); // array de fechas nuevas
+  // PUT /api/calendar/:dni
+  export const PUT = async (req, { params }) => {
+    try {
+      await connectDB();
 
-    if (!Array.isArray(fechas)) {
+      const dni = params.dni;
+      const { fechas } = await req.json(); // array de fechas nuevas (YYYY-MM-DD)
+
+      if (!Array.isArray(fechas)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Formato inválido: 'fechas' debe ser array",
+          },
+          { status: 400 }
+        );
+      }
+
+      if (fechas.length === 0) {
+        // Si envían un array vacío, borramos todas las fechas
+        await WorkedDate.deleteMany({ userDni: dni });
+        return NextResponse.json({ success: true, fechas: [] });
+      }
+
+      // Convertimos strings "YYYY-MM-DD" a Date
+      const dateObjects = fechas.map((d) => new Date(d));
+
+      // 1) Borramos las fechas que NO estén en el nuevo array
+      await WorkedDate.deleteMany({
+        userDni: dni,
+        workedDate: { $nin: dateObjects },
+      });
+
+      // 2) Insertamos/actualizamos (upsert) cada fecha con hours = 6
+      const ops = dateObjects.map((dateObj) => ({
+        updateOne: {
+          filter: { userDni: dni, workedDate: dateObj },
+          update: { $set: { hours: 6 } },
+          upsert: true,
+        },
+      }));
+
+      await WorkedDate.bulkWrite(ops);
+
+      return NextResponse.json({ success: true, fechas });
+    } catch (err) {
+      console.error("Error al guardar calendario:", err);
       return NextResponse.json(
-        { success: false, message: "Formato inválido: 'fechas' debe ser array" },
-        { status: 400 }
+        { success: false, message: "Error servidor" },
+        { status: 500 }
       );
     }
-
-    if (fechas.length === 0) {
-      // Si envían un array vacío, borramos todas las fechas
-      await pool.query("DELETE FROM worked_dates WHERE user_dni = ?", [dni]);
-      return NextResponse.json({ success: true, fechas: [] });
-    }
-
-    // 1) Borramos las fechas que no están en el nuevo array
-    await pool.query(
-      "DELETE FROM worked_dates WHERE user_dni = ? AND worked_date NOT IN (?)",
-      [dni, fechas]
-    );
-
-    // 2) Insertamos o actualizamos fechas (si ya existían, ON DUPLICATE KEY las mantiene)
-    const values = fechas.map((d) => [dni, d, 6]);
-    await pool.query(
-      `INSERT INTO worked_dates (user_dni, worked_date, hours) VALUES ? 
-       ON DUPLICATE KEY UPDATE hours = VALUES(hours)`,
-      [values]
-    );
-
-    return NextResponse.json({ success: true, fechas });
-  } catch (err) {
-    console.error("Error al guardar calendario:", err);
-    return NextResponse.json(
-      { success: false, message: "Error servidor" },
-      { status: 500 }
-    );
-  }
+  };
 };
