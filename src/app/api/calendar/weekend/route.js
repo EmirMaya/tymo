@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import WeekendHour from "@/models/WeekendHour";
 
+
 //put /api/calendar/weekend
 
 export async function PUT(req) {

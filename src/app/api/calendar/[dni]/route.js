@@ -12,15 +12,16 @@ export const GET = async (req, { params }) => {
 
     // fechas trabajadas
     const rowsDates = await WorkedDate.find({ userDni: dni })
-      .sort({ WorkedDate: 1 })
+      .sort({ workedDate: 1 }) // 👈 campo correcto
       .lean();
 
-    const fechas = rowsDates.map(
-      (row) => row.workedDate.toISOString().split("T")[0]
+    const fechas = rowsDates.map((row) =>
+      row.workedDate.toISOString().split("T")[0]
     );
 
-    //fin de semanas
+    // fines de semana
     const rowsHours = await WeekendHour.find({ userDni: dni }).lean();
+
     // Mapa { 'YYYY-MM-DD': 'HH:MM' }
     const weekendHours = {};
     for (const r of rowsHours) {
@@ -58,21 +59,17 @@ export const PUT = async (req, { params }) => {
     }
 
     if (fechas.length === 0) {
-      // Si envían un array vacío, borramos todas las fechas
       await WorkedDate.deleteMany({ userDni: dni });
       return NextResponse.json({ success: true, fechas: [] });
     }
 
-    // Convertimos strings "YYYY-MM-DD" a Date
     const dateObjects = fechas.map((d) => new Date(d));
 
-    // 1) Borramos las fechas que NO estén en el nuevo array
     await WorkedDate.deleteMany({
       userDni: dni,
       workedDate: { $nin: dateObjects },
     });
 
-    // 2) Insertamos/actualizamos (upsert) cada fecha con hours = 6
     const ops = dateObjects.map((dateObj) => ({
       updateOne: {
         filter: { userDni: dni, workedDate: dateObj },
@@ -92,3 +89,4 @@ export const PUT = async (req, { params }) => {
     );
   }
 };
+
