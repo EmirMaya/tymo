@@ -18,7 +18,8 @@ export const POST = async (req) => {
 
     // buscamos al user
     const user = await User.findOne({ dni });
-
+    console.log(user);
+    
     if (!user) {
       return NextResponse.json(
         { success: false, message: "DNI incorrecto" },
@@ -28,8 +29,9 @@ export const POST = async (req) => {
 
     // comparo pass con bcrypt
     const passwordMatch = await bcrypt.compare(password, user.password);
-
-    if (!password) {
+    console.log(passwordMatch);
+    
+    if (!passwordMatch) {
       return NextResponse.json(
         { success: false, message: "Contraseña Incorrecta" },
         { status: 401 }
@@ -64,6 +66,8 @@ export const POST = async (req) => {
         path: "/",
       })
     );
+
+    return res;
   } catch (err) {
     console.error("Error en la autenticación: ", err);
     return NextResponse.json(
