@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
-import pool from "@/app/api/db/mysql";
+import { connectDB } from "@/lib/mongodb";
+import WeekendHour from "@/models/WeekendHour";
 
-// PUT /api/calendar/weekend
+
+//put /api/calendar/weekend
+
 export async function PUT(req) {
   try {
+    await connectDB();
+
     const { userDni, date, ingreso } = await req.json();
 
     if (!userDni || !date || !ingreso) {
@@ -13,16 +18,17 @@ export async function PUT(req) {
       );
     }
 
-    // Normalizar a HH:MM:SS para MySQL
-    const ingresoSql = ingreso.length === 5 ? `${ingreso}:00` : ingreso;
+    // normalizamos a "HH:MM"
+    const ingresoStr =
+      ingreso.length === 5 ? ingreso : ingreso.toString().slice(0, 5);
 
-    await pool.query(
-      `INSERT INTO weekend_hours (user_dni, worked_date, ingreso_time)
-       VALUES (?, ?, ?)
-       ON DUPLICATE KEY UPDATE ingreso_time = VALUES(ingreso_time)`,
-      [userDni, date, ingresoSql]
+    const workedDate = new Date(date);
+
+    await WeekendHour.updateOne(
+      { userDni, workedDate },
+      { $set: { ingresoTime: ingresoStr } },
+      { upsert: true }
     );
-
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Error guardando weekend hour:", err);
@@ -36,6 +42,8 @@ export async function PUT(req) {
 // DELETE /api/calendar/weekend
 export async function DELETE(req) {
   try {
+    await connectDB();
+
     const { userDni, date } = await req.json();
 
     if (!userDni || !date) {
@@ -45,10 +53,9 @@ export async function DELETE(req) {
       );
     }
 
-    await pool.query(
-      "DELETE FROM weekend_hours WHERE user_dni = ? AND worked_date = ?",
-      [userDni, date]
-    );
+    const workedDate = new Date(date);
+
+    await WeekendHour.deleteOne({ userDni, workedDate });
 
     return NextResponse.json({ success: true });
   } catch (err) {
