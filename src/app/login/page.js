@@ -21,7 +21,7 @@ const Login = () => {
       return;
     }
     try {
-      const res = await axios.post("/api/login", { dni, password });
+      const res = await axios.post("/api/auth", { dni, password });
       // console.log("DATA: ", res.data);
 
       if (res.data.success) {
